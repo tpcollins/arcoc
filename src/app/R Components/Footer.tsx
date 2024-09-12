@@ -14,13 +14,13 @@ const Footer: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     >
-                    {/* <Image
+                    <Image
                         aria-hidden
                         src={item.imgUrl}
                         alt="File icon"
                         width={16}
                         height={16}
-                    /> */}
+                    />
                     {item.text}
                     </a>
                 ))}
