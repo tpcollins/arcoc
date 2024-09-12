@@ -1,6 +1,6 @@
 import { 
     FormData,
-    Footer,
+    FooterData,
     Listgroup
 } from "./DataDef";
 
@@ -10,7 +10,7 @@ export const shareKeyFormData: FormData = {
 }
 
 // Footer Section
-export const mainPageFooterData: Footer = {
+export const mainPageFooterData: FooterData = {
   links: [
     { text: "Collins Web Design LLC 2024", url: "https://tristancollins.org", imgUrl: "/icons/copyright.svg"}
   ]

@@ -1,6 +1,7 @@
 import Form from "./R Components/Form";
 import Footer from "./R Components/Footer";
 import { shareKeyFormData } from "./Data/Data";
+import { mainPageFooterData } from "./Data/Data";
 
 export default function Home() {
   return (
@@ -9,7 +10,7 @@ export default function Home() {
         <Form data={shareKeyFormData}/>
       </main>
       
-      <Footer />
+      <Footer data={mainPageFooterData}/>
     </div>
   );
 }

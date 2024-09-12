@@ -10,7 +10,7 @@ export interface FooterLink {
     imgUrl: string;
 }
   
-export interface Footer {
+export interface FooterData {
     links: FooterLink[]; // Array of FooterLink objects
 }
 
