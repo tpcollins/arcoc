@@ -1,7 +1,8 @@
 import { 
     FormData,
     FooterData,
-    Listgroup
+    Listgroup,
+    DropdownData
 } from "./DataDef";
 
 // Form Section
@@ -21,5 +22,15 @@ export const transPageLgData: Listgroup = {
   links: [
     {linkHeader: "Translator"},
     {linkHeader: "Settings"},
+  ]
+}
+
+// Dropdown Section
+export const langSelectionData: DropdownData = {
+  btnDrpDwnTxt: "Language",
+  links: [
+    {lang: "Español", flag: "/icons/spain.svg"},
+    {lang: "English", flag: "/icons/america.svg"},
+    {lang: "Chinese", flag: "/icons/china.svg"},
   ]
 }

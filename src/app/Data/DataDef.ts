@@ -22,3 +22,14 @@ export interface ListgroupLink {
 export interface Listgroup {
     links: ListgroupLink[]; // Array of FooterLink objects
 }
+
+// Dropdown Section
+export interface DropdownData {
+    btnDrpDwnTxt: string;
+    links: DropdownButtons[];
+}
+
+export interface DropdownButtons {
+    lang: string;
+    flag: string;
+}

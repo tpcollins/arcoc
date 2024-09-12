@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from 'react';
 import localFont from "next/font/local";
 import 'bootstrap/dist/css/bootstrap.min.css';
+// import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import "./globals.css";
 
 const geistSans = localFont({
@@ -22,18 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   useEffect(() => {
-    require('bootstrap/dist/js/bootstrap.bundle.min.js'); 
+    require('bootstrap/dist/js/bootstrap.bundle.min.js');
   }, []);
 
-// export default function RootLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   useEffect(() => {
-//     // Dynamically import Bootstrap JS
-//     import('bootstrap/dist/js/bootstrap.bundle.min.js');
-//   }, []);
 
   return (
     <>

@@ -4,6 +4,8 @@
 /* TABLE OF CONTENTS
   1. Global Styles
   2. Form Styles
+  3. List Group Styles
+  4. Dropdown Button Styles
 */
 
 /* 1. Global Styles */
@@ -46,12 +48,19 @@ body {
   background-color: #4C3575 !important;
 }
 
-/* List Group Styles */
+/* 3. List Group Styles */
 #lgTextStyle{
   color: white;
 }
 
 .list-group-item {
+  outline: none !important;
+  border: none !important;
+}
+
+/* 4. Dropdown Button Styles */
+.drpdwnBtnStyle{
+  color:beige !important;
   outline: none !important;
   border: none !important;
 }

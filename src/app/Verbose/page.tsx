@@ -3,8 +3,9 @@
 import React from 'react';
 import PlayButton from '../R Components/PlayButton';
 import ListGroup from '../R Components/ListGroup';
-import Dropdown from '../R Components/Dropdown';
+import DropdownMenu from '../R Components/DropdownMenu';
 import { transPageLgData } from '../Data/Data';
+import { langSelectionData } from '../Data/Data';
 
 const Verbose: React.FC = () => {
 
@@ -12,7 +13,9 @@ const Verbose: React.FC = () => {
         <>
             <ListGroup data={transPageLgData} />
             <PlayButton />
-            <Dropdown />
+            <DropdownMenu data={langSelectionData}/>
+            <DropdownMenu data={langSelectionData}/>
+            <DropdownMenu data={langSelectionData}/>
         </>
     )
 };
