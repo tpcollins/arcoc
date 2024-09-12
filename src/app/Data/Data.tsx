@@ -11,8 +11,6 @@ export const shareKeyFormData: Form = {
 // Footer Section
 export const mainPageFooterData: Footer = {
   links: [
-    { text: "Learn", url: "https://nextjs.org/learn", imgUrl: "https://nextjs.org/icons/file.svg"},
-    { text: "Examples", url: "https://nextjs.org/examples", imgUrl: "https://nextjs.org/icons/window.svg" },
-    { text: "Go to nextjs.org", url: "https://nextjs.org", imgUrl: "https://nextjs.org/icons/globe.svg" }
+    { text: "Collins Web Design 2024", url: "https://tristancollins.org", imgUrl: "https://nextjs.org/icons/file.svg"}
   ]
 };
