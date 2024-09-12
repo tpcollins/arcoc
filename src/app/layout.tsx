@@ -4,6 +4,7 @@ import { ReactNode, useEffect } from 'react';
 import localFont from "next/font/local";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./globals.css";
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
