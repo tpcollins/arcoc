@@ -2,6 +2,7 @@
 
 import React, { FormEvent, useRef } from 'react';
 import { shareKeyFormData } from '../Data/Data';
+import { useRouter } from 'next/navigation';
 
 const Form: React.FC = () => {
     // useRef hooks are used to reference an object 
@@ -10,6 +11,7 @@ const Form: React.FC = () => {
     // Most common use is to grab HTML elements from the DOM
 
     const { formText } = shareKeyFormData;
+    const router = useRouter();
 
     const handleSubmit = (e: FormEvent) => {
         console.log(e)
