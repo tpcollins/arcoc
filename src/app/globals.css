@@ -1,7 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* TABLE OF CONTENTS
+  1. Global Styles
+  2. Form Styles
+*/
 
+/* 1. Global Styles */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -16,7 +21,7 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: var(--background) !important;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -24,4 +29,13 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* 2. Form Styles */
+.input-style{
+  border-radius: 140px;
+}
+
+.formtext-style{
+  color: white;
 }
