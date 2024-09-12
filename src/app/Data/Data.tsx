@@ -1,11 +1,11 @@
 import { 
-    Form,
+    FormData,
     Footer,
     Listgroup
 } from "./DataDef";
 
 // Form Section
-export const shareKeyFormData: Form = {
+export const shareKeyFormData: FormData = {
     formText: "Please Enter Your Share Key"
 }
 

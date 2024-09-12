@@ -1,5 +1,5 @@
 // Form Section
-export interface Form {
+export interface FormData {
     formText: string;
 }
 
@@ -22,4 +22,3 @@ export interface ListgroupLink {
 export interface Listgroup {
     links: ListgroupLink[]; // Array of FooterLink objects
 }
-  

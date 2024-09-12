@@ -1,11 +1,14 @@
 "use client";
 
 import React, { FormEvent, useRef } from 'react';
-import { shareKeyFormData } from '../Data/Data';
 import { useRouter } from 'next/navigation';
+import { FormData } from '../Data/DataDef';
 
-const Form: React.FC = () => {
-       const { formText } = shareKeyFormData;
+interface FormProps {
+    data: FormData;
+}
+
+const Form: React.FC<FormProps> = ({ data }) => {
     const router = useRouter();
 
     const handleSubmit = (e: FormEvent) => {
@@ -21,7 +24,7 @@ const Form: React.FC = () => {
         <>
             <form onSubmit={handleSubmit}>
                 <div className="mb-3 text-center">
-                    <label htmlFor="name" className="form-label formtext-style">{formText}</label>
+                    <label htmlFor="name" className="form-label formtext-style">{data.formText}</label>
                     <br></br>
                     <input id='name' type="text" className="form-control input-style" />
                 </div>
