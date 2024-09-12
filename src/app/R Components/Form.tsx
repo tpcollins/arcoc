@@ -28,7 +28,7 @@ const Form: React.FC = () => {
 
                 <div className='text-center'>
                     <button 
-                    className="btn btn-primary"
+                    className="btn btn-light btnStyle"
                     onClick={handleRoute}
                     type='submit'
                      >Submit</button>
