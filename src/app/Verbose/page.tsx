@@ -1,14 +1,15 @@
 "use client";
 
-import React, { FormEvent } from 'react';
+import React from 'react';
+import PlayButton from '../R Components/PlayButton';
 
-const Form: React.FC = () => {
+const Verbose: React.FC = () => {
 
     return(
         <>
-            <h1>Header</h1>
+            <PlayButton />
         </>
     )
 };
 
-export default Form;
+export default Verbose;

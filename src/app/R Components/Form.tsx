@@ -5,17 +5,17 @@ import { shareKeyFormData } from '../Data/Data';
 import { useRouter } from 'next/navigation';
 
 const Form: React.FC = () => {
-    // useRef hooks are used to reference an object 
-    // They are good for sending an object to a database (we are just logging the object here, not actually sending it)
-    // Ref accesses elements from the DOM; keeps the same reference between renders
-    // Most common use is to grab HTML elements from the DOM
-
-    const { formText } = shareKeyFormData;
+       const { formText } = shareKeyFormData;
     const router = useRouter();
 
     const handleSubmit = (e: FormEvent) => {
         console.log(e)
     }
+
+    const handleRoute = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault(); // Prevent button from submitting the form
+        router.push('/verbose'); // Route to /verbose
+    };
 
     return(
         <>
@@ -27,7 +27,11 @@ const Form: React.FC = () => {
                 </div>
 
                 <div className='text-center'>
-                    <button className="btn btn-primary" type='submit'>Submit</button>
+                    <button 
+                    className="btn btn-primary"
+                    onClick={handleRoute}
+                    type='submit'
+                     >Submit</button>
                 </div>
             </form>
         </>
