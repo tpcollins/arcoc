@@ -19,8 +19,8 @@ const Verbose: React.FC = () => {
         <>
             <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
                 <div className="d-flex justify-content-around w-75 mb-4">
-                    <DropdownMenu data={targetLangData} />
                     <DropdownMenu data={sourceLangData} />
+                    <DropdownMenu data={targetLangData} />
                     <DropdownMenu data={targetLangData} />
                 </div>
 
