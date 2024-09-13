@@ -25,7 +25,7 @@ export const transPageLgData: Listgroup = {
   ]
 }
 
-// Dropdown Section
+// Dropdown Language Section
 export const targetLangData: DropdownData = {
   btnDrpDwnTxt: "Target Language",
   links: [
@@ -40,6 +40,17 @@ export const sourceLangData: DropdownData = {
   links: [
     {lang: "Español", flag: "/icons/spain.svg"},
     {lang: "English", flag: "/icons/america.svg"},
+    {lang: "Chinese", flag: "/icons/china.svg"},
+  ]
+}
+
+export const neuralVoiceData: DropdownData = {
+  btnDrpDwnTxt: "Neural Voice",
+  links: [
+    {lang: "Español", flag: "/icons/spain.svg"},
+    {lang: "AriaNeural", flag: "/icons/america.svg"},
+    {lang: "GuyNeural", flag: "/icons/america.svg"},
+    {lang: "JennyNeural", flag: "/icons/america.svg"},
     {lang: "Chinese", flag: "/icons/china.svg"},
   ]
 }
