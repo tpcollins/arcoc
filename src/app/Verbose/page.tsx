@@ -1,7 +1,6 @@
 /* TODO:
-    1. Make all components fully reusable
-    2. Do settings page
-    3. Review Azure Speech docs to start connecting backend
+    1. Do settings page
+    2. Review Azure Speech docs to start connecting backend
 */
 "use client";
 
@@ -9,6 +8,7 @@ import React from 'react';
 import PlayButton from '../R Components/PlayButton';
 import ListGroup from '../R Components/ListGroup';
 import DropdownMenu from '../R Components/DropdownMenu';
+import VolumeSlider from '../R Components/VolumeSlider';
 
 import { transPageLgData } from '../Data/Data';
 import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
