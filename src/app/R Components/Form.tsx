@@ -1,44 +1,68 @@
 "use client";
-
-import React, { FormEvent, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData } from '../Data/DataDef';
 
 interface FormProps {
-    data: FormData;
+  data: FormData;
 }
 
 const Form: React.FC<FormProps> = ({ data }) => {
-    const router = useRouter();
+  const [inputValue, setInputValue] = useState(''); // Track input value
+  const [errorMessage, setErrorMessage] = useState(''); // Track error message
+  const correctKey = '111'; // The correct key
+  const router = useRouter();
 
-    const handleSubmit = (e: FormEvent) => {
-        console.log(e)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value); // Capture the input value
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
+
+    if (inputValue === correctKey) {
+      // If the key is valid, route to the next page
+      setErrorMessage(''); // Clear any error message
+      router.push('/verbose');
+    } else {
+      // If the key is invalid, set an error message
+      setErrorMessage('Invalid Key');
     }
+  };
 
-    const handleRoute = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault(); // Prevent button from submitting the form
-        router.push('/verbose'); // Route to /verbose
-    };
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-3 text-center">
+        <label htmlFor="name" className="form-label forText-style">
+          {data.formText}
+        </label>
+        <br />
+        <input
+          id="name"
+          type="text"
+          name="key"
+          className="form-control input-style"
+          value={inputValue}
+          onChange={handleInputChange} // Capture user input
+        />
+      </div>
 
-    return(
-        <>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-3 text-center">
-                    <label htmlFor="name" className="form-label formtext-style">{data.formText}</label>
-                    <br></br>
-                    <input id='name' type="text" className="form-control input-style" />
-                </div>
+      <div className="text-center">
+        <button
+          className="btn btn-light btnStyle"
+          type="submit"
+        >
+          Submit
+        </button>
+      </div>
 
-                <div className='text-center'>
-                    <button 
-                    className="btn btn-light btnStyle"
-                    onClick={handleRoute}
-                    type='submit'
-                     >Submit</button>
-                </div>
-            </form>
-        </>
-    )
+      {errorMessage && (
+        <div className="text-center mt-2" style={{ color: 'red' }}>
+          {errorMessage}
+        </div> // Display error message if key is invalid
+      )}
+    </form>
+  );
 };
 
 export default Form;

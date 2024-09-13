@@ -49,13 +49,30 @@ body {
 }
 
 /* 3. List Group Styles */
-#lgTextStyle{
+/* #lgTextStyle{
   color: white;
-}
+} */
 
 .list-group-item {
   outline: none !important;
   border: none !important;
+}
+
+#lgTextStyle {
+  font-size: 1.5rem; /* Increase font size */
+  padding: 10px 40px; /* Add padding to increase the clickable area */
+  color:white;
+}
+
+.list-group {
+  width: 100%; /* Make ListGroup span the full width */
+  max-width: 1000px; /* Limit maximum width */
+  margin: 0 auto; /* Center horizontally */
+}
+
+/* Add more spacing between ListGroup and Dropdown buttons */
+.mb-4 {
+  margin-bottom: 2rem !important; /* Increase margin-bottom for more space */
 }
 
 /* 4. Dropdown Button Styles */

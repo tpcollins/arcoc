@@ -8,7 +8,7 @@ interface ListGroupProps {
 }
 
 const ListGroup: React.FC<ListGroupProps> = ({ data }) => {
-  const [styleIndex, setStyleIndex] = useState(-1);
+  const [styleIndex, setStyleIndex] = useState(0);
 
   const handleClick = (idx: number) => {
     setStyleIndex(idx);

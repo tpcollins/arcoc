@@ -1,53 +1,45 @@
-import Image from "next/image";
+"use client";
+
 import { Dropdown } from 'react-bootstrap';
 import { DropdownData } from '../Data/DataDef';
+import { useState } from "react";
 
-interface DropdownMenuProps {
-  data: DropdownData;
+interface DropdownMenuProps<T> {
+  data: DropdownData<T>;
+  renderItem: (item: T) => React.ReactNode;
 }
 
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ data }) => {
+const DropdownMenu = <T extends {}>({ data, renderItem }: DropdownMenuProps<T>) => {
+
+  const [selected, setSelected] = useState(data.btnDrpDwnTxt);
+
+  const handleSelect = (selectedItem: T) => {
+    setSelected((selectedItem as any).lang);
+  }
 
   return (
     <>
-      <Dropdown>
-        <Dropdown.Toggle 
-        id="dropdown-basic"
-        style={{ 
-          outline: 'none',
-          border: 'none' }}>
-          {data.btnDrpDwnTxt}
+      <Dropdown onSelect={(eventKey) => handleSelect(eventKey as unknown as T)}>
+        <Dropdown.Toggle id="dropdown-basic">
+          {selected}
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
-        {data.links.map((item, idx) => (
-          <Dropdown.Item 
-          href="#/action-1"
-          style={{
-            borderBottom: idx !== data.links.length - 1 ? '1px solid' : 'none',
-            padding: '8px 16px',
-            width: '100%'
-          }}
-          >
-            <div style={{
-              alignItems: 'center', 
-              display: 'flex', 
+          {data.links.map((item, idx) => (
+            <Dropdown.Item
+            href="#/action-1" 
+            eventKey={item as any}
+            key={idx}
+            onClick={() => handleSelect(item)}
+            style={{
+              borderBottom: idx !== data.links.length - 1 ? '1px solid' : 'none',
+              padding: '8px 16px',
               width: '100%'
-              }}>
-              <Image
-                  alt="File icon"
-                  aria-hidden
-                  height={16}
-                  key={idx}
-                  src={item.flag}
-                  style={{paddingRight: '5px'}}
-                  width={16}
-                  
-              />
-              {item.lang}
-            </div>
-          </Dropdown.Item>
-        ))}
+          }}
+            >
+              {renderItem(item)}
+            </Dropdown.Item>
+          ))}
         </Dropdown.Menu>
       </Dropdown>
     </>

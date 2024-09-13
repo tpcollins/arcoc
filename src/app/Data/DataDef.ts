@@ -24,9 +24,9 @@ export interface Listgroup {
 }
 
 // Dropdown Section
-export interface DropdownData {
-    btnDrpDwnTxt: string;
-    links: DropdownButtons[];
+export interface DropdownData<T> {
+    btnDrpDwnTxt: string;   
+    links: T[];
 }
 
 export interface DropdownButtons {
