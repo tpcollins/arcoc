@@ -22,9 +22,9 @@ const PlayButton: React.FC = () => {
     >
         {isPlaying ? (
         <svg 
-        height="48"
+        height="75"
         viewBox="0 0 24 24"
-        width="48"
+        width="75"
         xmlns="http://www.w3.org/2000/svg">
             <rect 
             fill='#b1b2b5'
@@ -36,9 +36,9 @@ const PlayButton: React.FC = () => {
         </svg>
       ) : (
         <svg 
-        height="48"
+        height="75"
         viewBox="0 0 24 24"
-        width="48"
+        width="75"
         xmlns="http://www.w3.org/2000/svg">
           <path 
           d="M8 5v14l11-7z"

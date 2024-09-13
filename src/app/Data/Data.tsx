@@ -26,8 +26,17 @@ export const transPageLgData: Listgroup = {
 }
 
 // Dropdown Section
-export const langSelectionData: DropdownData = {
-  btnDrpDwnTxt: "Language",
+export const targetLangData: DropdownData = {
+  btnDrpDwnTxt: "Target Language",
+  links: [
+    {lang: "Español", flag: "/icons/spain.svg"},
+    {lang: "English", flag: "/icons/america.svg"},
+    {lang: "Chinese", flag: "/icons/china.svg"},
+  ]
+}
+
+export const sourceLangData: DropdownData = {
+  btnDrpDwnTxt: "Source Language",
   links: [
     {lang: "Español", flag: "/icons/spain.svg"},
     {lang: "English", flag: "/icons/america.svg"},
