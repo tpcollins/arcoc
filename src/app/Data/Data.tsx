@@ -9,7 +9,7 @@ import DropdownMenu from "../R Components/DropdownMenu";
 
 // Form Section
 export const shareKeyFormData: FormData = {
-    formText: "Please Enter Your Share Key"
+    formText: "Please Enter Your Speech Key"
 }
 
 // Footer Section

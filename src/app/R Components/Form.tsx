@@ -8,25 +8,29 @@ interface FormProps {
 }
 
 const Form: React.FC<FormProps> = ({ data }) => {
-  const [inputValue, setInputValue] = useState(''); // Track input value
-  const [errorMessage, setErrorMessage] = useState(''); // Track error message
-  const correctKey = '111'; // The correct key
+  const [apiKey, setApiKey] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value); // Capture the input value
-  };
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
+    const res = await fetch('/api/validateKey', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ apiKey }),
+    });
 
-    if (inputValue === correctKey) {
-      // If the key is valid, route to the next page
-      setErrorMessage(''); // Clear any error message
-      router.push('/verbose');
-    } else {
-      // If the key is invalid, set an error message
+    if (!res.ok) {
+      const result = await res.json();
+      setError(result.error);
       setErrorMessage('Invalid Key');
+    } else {
+      setError('');
+      router.push('/verbose');
     }
   };
 
@@ -38,12 +42,11 @@ const Form: React.FC<FormProps> = ({ data }) => {
         </label>
         <br />
         <input
-          id="name"
           type="text"
-          name="key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          required
           className="form-control input-style"
-          value={inputValue}
-          onChange={handleInputChange} // Capture user input
         />
       </div>
 
@@ -55,7 +58,6 @@ const Form: React.FC<FormProps> = ({ data }) => {
           Submit
         </button>
       </div>
-
       {errorMessage && (
         <div className="text-center mt-2" style={{ color: 'red' }}>
           {errorMessage}
