@@ -26,7 +26,7 @@ export const transPageLgData: Listgroup = {
     {linkHeader: "Settings"},
   ]
 }
-
+ 
 // Dropdown Language Section
 export const targetLangData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Target Language",
