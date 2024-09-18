@@ -1,8 +1,10 @@
+// TODO:
+// 1. Get azure speech language api working. api key needs to be passed, using the context api already created, from the form component
 "use client";
 
 import { Dropdown } from 'react-bootstrap';
 import { DropdownData } from '../Data/DataDef';
-import { useState } from "react";
+// import { useState } from "react";
 
 interface DropdownMenuProps<T> {
   data: DropdownData<T>;
@@ -11,17 +13,11 @@ interface DropdownMenuProps<T> {
 
 const DropdownMenu = <T extends {}>({ data, renderItem }: DropdownMenuProps<T>) => {
 
-  const [selected, setSelected] = useState(data.btnDrpDwnTxt);
-
-  const handleSelect = (selectedItem: T) => {
-    setSelected((selectedItem as any).lang);
-  }
-
   return (
     <>
-      <Dropdown onSelect={(eventKey) => handleSelect(eventKey as unknown as T)}>
+      <Dropdown>
         <Dropdown.Toggle id="dropdown-basic">
-          {selected}
+          {data.btnDrpDwnTxt}
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
@@ -30,7 +26,6 @@ const DropdownMenu = <T extends {}>({ data, renderItem }: DropdownMenuProps<T>) 
             href="#/action-1" 
             eventKey={item as any}
             key={idx}
-            onClick={() => handleSelect(item)}
             style={{
               borderBottom: idx !== data.links.length - 1 ? '1px solid' : 'none',
               padding: '8px 16px',

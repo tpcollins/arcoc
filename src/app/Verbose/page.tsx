@@ -1,14 +1,9 @@
-/* TODO:
-    1. Do settings page
-    2. Review Azure Speech docs to start connecting backend
-*/
 "use client";
 
 import React from 'react';
 import PlayButton from '../R Components/PlayButton';
 import ListGroup from '../R Components/ListGroup';
 import DropdownMenu from '../R Components/DropdownMenu';
-import VolumeSlider from '../R Components/VolumeSlider';
 
 import { transPageLgData } from '../Data/Data';
 import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
@@ -27,25 +22,23 @@ const Verbose: React.FC = () => {
                     <DropdownMenu 
                         data={sourceLangData} 
                         renderItem={(item) => (
-                            <>
-                                <div
-                                style={{
-                                    alignItems: 'center', 
-                                    display: 'flex', 
-                                    width: '100%'
-                                }}
-                                >
-                                    <img 
-                                    alt="File icon"
-                                    aria-hidden
-                                    height={16}
-                                    src={item.flag}
-                                    style={{paddingRight: '5px'}}
-                                    width={16}
-                                    />
-                                    {item.lang}
-                                </div>
-                            </>
+                            <div
+                            style={{
+                                alignItems: 'center', 
+                                display: 'flex', 
+                                width: '100%'
+                            }}
+                            >
+                                <img 
+                                alt="File icon"
+                                aria-hidden
+                                height={16}
+                                src={item.flag}
+                                style={{paddingRight: '5px'}}
+                                width={16}
+                                />
+                                {item.lang}
+                            </div>
                         )}
                     />
 
@@ -78,26 +71,24 @@ const Verbose: React.FC = () => {
                     <DropdownMenu 
                         data={neuralVoiceData} 
                         renderItem={(item) => (
-                            <> 
-                                <div
-                                style={{
-                                    alignItems: 'center', 
-                                    display: 'flex', 
-                                    width: '100%'
-                                }}
-                                >
-                                    <img 
-                                      
-                                    alt="File icon"
-                                    aria-hidden
-                                    height={16}
-                                    src={item.flag}
-                                    style={{paddingRight: '5px'}}
-                                    width={16}
-                                    />
-                                    {item.lang}
-                                </div>
-                            </>
+                            <div
+                            style={{
+                                alignItems: 'center', 
+                                display: 'flex', 
+                                width: '100%'
+                            }}
+                            >
+                                <img 
+                                    
+                                alt="File icon"
+                                aria-hidden
+                                height={16}
+                                src={item.flag}
+                                style={{paddingRight: '5px'}}
+                                width={16}
+                                />
+                                {item.lang}
+                            </div>
                         )}
                     />
                 </div>

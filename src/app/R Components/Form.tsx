@@ -2,14 +2,14 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData } from '../Data/DataDef';
+import { useApiKey } from '@/Contexts/ApiKeyContext';
 
 interface FormProps {
   data: FormData;
 }
 
 const Form: React.FC<FormProps> = ({ data }) => {
-  const [apiKey, setApiKey] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const {apiKey, setApiKey} = useApiKey();
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
 
@@ -25,11 +25,8 @@ const Form: React.FC<FormProps> = ({ data }) => {
     });
 
     if (!res.ok) {
-      const result = await res.json();
-      setError(result.error);
       setErrorMessage('Invalid Key');
     } else {
-      setError('');
       router.push('/verbose');
     }
   };
