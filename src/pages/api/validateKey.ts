@@ -7,6 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { apiKey } = req.body;
+    console.log("URL: ", 'https://eastus2.api.cognitive.microsoft.com/sts/v1.0/issueToken');
+    console.log("Headers: ", {'Ocp-Apim-Subscription-Key': apiKey, 'Content-Type': 'application/x-www-form-urlencoded'});
     const response = await fetch('https://eastus2.api.cognitive.microsoft.com/sts/v1.0/issueToken', {
         method: 'POST',
         headers: {

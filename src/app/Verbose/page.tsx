@@ -1,13 +1,12 @@
 "use client";
 
 import React from 'react';
-// import PlayButton from '../R Components/PlayButton';
+import PlayButton from '../R Components/PlayButton';
 import ListGroup from '../R Components/ListGroup';
 import DropdownMenu from '../R Components/DropdownMenu';
-import { ApiKeyProvider } from '@/Contexts/ApiKeyContext';
 
 import { transPageLgData } from '../Data/Data';
-// import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
+import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
 
 const Verbose: React.FC = () => {
 
@@ -19,10 +18,7 @@ const Verbose: React.FC = () => {
                 </div>
 
                 <div className="d-flex justify-content-around w-75 mb-4">
-                    <ApiKeyProvider>
-                        <DropdownMenu />
-                    </ApiKeyProvider>
-                    {/* <DropdownMenu 
+                    <DropdownMenu 
                         data={sourceLangData} 
                         renderItem={(item) => (
                             <div
@@ -93,7 +89,7 @@ const Verbose: React.FC = () => {
                                 {item.lang}
                             </div>
                         )}
-                    /> */}
+                    />
                 </div>
             </div>
         </>
