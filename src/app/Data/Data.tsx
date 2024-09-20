@@ -41,15 +41,15 @@ export const languageList = [
   { lang: "Bulgarian", code: "bg", flag: "" },
   { lang: "Cantonese (Traditional)", code: "yue", flag: "" },
   { lang: "Catalan", code: "ca", flag: "" },
-  { lang: "Chinese (Literary)", code: "lzh", flag: "" },
-  { lang: "Chinese Simplified", code: "zh-Hans", flag: "" },
-  { lang: "Chinese Traditional", code: "zh-Hant", flag: "" },
+  { lang: "Chinese (Literary)", code: "lzh", flag: "/icons/china.svg" },
+  { lang: "Chinese Simplified", code: "zh-Hans", flag: "/icons/china.svg" },
+  { lang: "Chinese Traditional", code: "zh-Hant", flag: "/icons/china.svg" },
   { lang: "Croatian", code: "hr", flag: "" },
   { lang: "Czech", code: "cs", flag: "" },
   { lang: "Danish", code: "da", flag: "" },
   { lang: "Dari", code: "prs", flag: "" },
   { lang: "Dutch", code: "nl", flag: "" },
-  { lang: "English", code: "en", flag: "" },
+  { lang: "English", code: "en", flag: "/icons/america.svg" },
   { lang: "Estonian", code: "et", flag: "" },
   { lang: "Fijian", code: "fj", flag: "" },
   { lang: "Filipino", code: "fil", flag: "" },
@@ -105,7 +105,7 @@ export const languageList = [
   { lang: "Serbian (Latin)", code: "sr-Latn", flag: "" },
   { lang: "Slovak", code: "sk", flag: "" },
   { lang: "Slovenian", code: "sl", flag: "" },
-  { lang: "Spanish", code: "es", flag: "" },
+  { lang: "Spanish", code: "es", flag: "/icons/spain.svg" },
   { lang: "Swahili", code: "sw", flag: "" },
   { lang: "Swedish", code: "sv", flag: "" },
   { lang: "Tahitian", code: "ty", flag: "" },
@@ -138,11 +138,7 @@ export const targetLangData: DropdownData<{ lang: string; flag: string }> = {
 
 export const sourceLangData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Source Language",
-  links: [
-    { lang: "English", flag: "/icons/america.svg" },
-    { lang: "Español", flag: "/icons/spain.svg" },
-    { lang: "Chinese", flag: "/icons/china.svg" }
-  ]
+  links: languageList
 };
 
   <DropdownMenu
