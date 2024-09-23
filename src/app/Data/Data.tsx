@@ -122,7 +122,11 @@ export const languageList = [
 
 export const targetLangData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Target Language",
-  links: languageList
+  links: languageList,
+  config: {
+    displayText: 'lang',
+    renderItemText: 'lang'
+  }
 };
 
   <DropdownMenu
@@ -137,7 +141,11 @@ export const targetLangData: DropdownData<{ lang: string; flag: string }> = {
 
 export const sourceLangData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Source Language",
-  links: languageList
+  links: languageList,
+  config: {
+    displayText: 'lang',
+    renderItemText: 'lang'
+  }
 };
 
   <DropdownMenu
@@ -160,7 +168,11 @@ export const neuralVoiceData: DropdownData<{ lang: string; flag: string }> = {
     { lang: "JorgeNeural (Friendly Male)", flag: "/icons/spain.svg" },
     { lang: "XiaoxiaoNeural (Cheerful Female)", flag: "/icons/china.svg" },
     { lang: "YunxiNeural (Calm Male)", flag: "/icons/china.svg" }
-  ]
+  ],
+  config: {
+    displayText: 'lang',
+    renderItemText: 'lang'
+  }
 };
 
   <DropdownMenu

@@ -30,9 +30,13 @@ export interface DropdownItem {
     lang: string;
 }
 
-export interface DropdownData<T extends DropdownItem> {
+export interface DropdownData<T> {
     btnDrpDwnTxt: string;
     links: T[];
+    config: {
+        displayText: keyof T;  // Property name for the text to display on the button
+        renderItemText: keyof T;  // Property name for the text to render in the list
+    };
 }
 
 export interface DropdownButtons {
