@@ -1,4 +1,4 @@
-import Form from "./R Components/Form";
+import Form from "./Components/Form";
 import Footer from "./R Components/Footer";
 import { shareKeyFormData } from "./Data/Data";
 import { mainPageFooterData } from "./Data/Data";
