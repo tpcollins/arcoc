@@ -1,7 +1,7 @@
 // TODO:
 /*
 1. Add neural voices to each of the languages in the languageList in the data file so that voice can
-  be displayed according to the language selected. Only Spanish, English, and Chinese need multiple languages
+  be displayed according to the language selected. Only Spanish, English, and Chinese need multiple voices
   available. 
   Every other language can just have a standard male and female voice available. Might need separate field for
   neural language code for hooking up the backend. Check documentation
