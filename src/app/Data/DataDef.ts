@@ -43,3 +43,14 @@ export interface DropdownButtons {
     lang: string;
     flag: string;
 }
+
+export interface Voice {
+    Name: string;
+    DisplayName: string;
+    LocalName: string;
+    ShortName: string;
+    Gender: string;
+    Locale: string;
+    SampleRateHertz: string;
+    VoiceType: string;
+}
