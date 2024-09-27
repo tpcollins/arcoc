@@ -4,29 +4,32 @@ import { useLocale } from '@/Contexts/LocalizationContext';
 import { useVoices } from '@/Custom Hooks/useVoices';
 import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
+import { useApiKey } from '@/Contexts/ApiKeyContext';
 
-const LanguageSelectionComponent = () => {
-  const { locale, setLocale } = useLocale();
-  const voices = useVoices(locale);
-  const [dropdownData, setDropdownData] = useState(neuralVoiceData);
+const LanguageSelection = () => {
+    const { locale, setLocale } = useLocale();
+    const {apiKey} = useApiKey();
+    const voices = useVoices(locale, apiKey);
+    const [dropdownData, setDropdownData] = useState(neuralVoiceData);
 
-  const handleTargetLanguageChange = (newLocale: string) => {
-    setLocale(newLocale);  // Update the locale in the context, which will trigger the useVoices hook
-  };
+    const handleTarLangChange = (newLocale: string) => {
+        setLocale(newLocale);  // Update the locale in the context, which will trigger the useVoices hook
+    };
 
-  useEffect(() => {
-    // When voices are fetched, update the links in dropdownData
-    setDropdownData(prevData => ({
-        ...prevData,
-        links: voices.map(voice => ({
-            lang: voice.lang,
-            flag: voice.flag // Assuming 'voice' has a 'flag' property
-        }))
-    }));
-}, [voices]);
+    useEffect(() => {
+        // When voices are fetched, update the links in dropdownData
+        setDropdownData(prevData => ({
+            ...prevData,
+            voices
+        }));
+        console.log("useEffect Locale",locale)
+        console.log("voices", voices)
+        console.log(apiKey);
+        
+    }, [voices, locale]);
 
   return (
-    <div>
+    <>
       <DropdownMenu 
         data={sourceLangData} 
         renderItem={(item) => (
@@ -53,7 +56,7 @@ const LanguageSelectionComponent = () => {
         <div className="d-flex flex-column align-items-center">
             <DropdownMenu
                 data={targetLangData}
-                onChange={handleTargetLanguageChange}
+                handleTarLangChange={handleTarLangChange}
                 renderItem={(item) => (
                     <div style={{ 
                         alignItems: 'center',
@@ -78,7 +81,7 @@ const LanguageSelectionComponent = () => {
         </div>
 
         <DropdownMenu 
-            data={voices} 
+            data={dropdownData} 
             renderItem={(item) => (
                 <div
                 style={{
@@ -100,8 +103,8 @@ const LanguageSelectionComponent = () => {
                 </div>
             )}
         />
-    </div>
+    </>
   );
 };
 
-export default LanguageSelectionComponent;
+export default LanguageSelection;

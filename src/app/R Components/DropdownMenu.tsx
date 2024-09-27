@@ -10,10 +10,14 @@
 "use client";
 
 import { Dropdown } from 'react-bootstrap';
-import { DropdownData } from '../Data/DataDef';
+import { DropdownMenuProps } from '../Data/DataDef';
 import { useState, useRef, useEffect } from 'react';
 
-const DropdownMenu = <T extends { [key: string]: any }>({ data, renderItem }: { data: DropdownData<T>, renderItem: (item: T) => React.ReactNode }) => {
+const DropdownMenu = <T extends { [key: string]: any }>({
+  data,
+  renderItem,
+  handleTarLangChange,
+}: DropdownMenuProps<T>) => {
 
   const [filter, setFilter] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -24,10 +28,19 @@ const DropdownMenu = <T extends { [key: string]: any }>({ data, renderItem }: { 
     if (isOpen && inputRef.current) inputRef.current.focus();
   },[isOpen]);
 
+  const handleSelect = (item: T) => {
+    if (handleTarLangChange) {
+      handleTarLangChange(item as unknown as string);
+    }
+    
+  };
+
   const handleSelValue = (item: T) =>{
     setSelValue(item[data.config.displayText] as string);
     setIsOpen(false);
   }
+
+  
 
   const filteredData = data.links.filter(item => item[data.config.renderItemText].toLowerCase().includes(filter.toLowerCase()));
 
@@ -52,9 +65,10 @@ const DropdownMenu = <T extends { [key: string]: any }>({ data, renderItem }: { 
             <Dropdown.Item
               eventKey={item as any}
               key={idx}
-              onClick={
-                () => handleSelValue(item)
-              }
+              onClick={async () => {
+                await handleSelValue(item);
+                handleSelect(item.code);
+              }}
               style={{
                 borderBottom: idx !== filteredData.length - 1 ? '1px solid' : 'none',
                 padding: '8px 16px',

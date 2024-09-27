@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ApiKeyContextType } from '@/app/Data/Data';
+import { ApiKeyContextType } from '@/app/Data/DataDef';
 
 const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
@@ -17,7 +17,7 @@ interface ApiKeyProviderProps {
 }
 
 export const ApiKeyProvider: React.FC<ApiKeyProviderProps> = ({ children }) => {
-  const [apiKey, setApiKey] = useState<string>('');
+  const [apiKey, setApiKey] = useState('');
 
   return (
     <ApiKeyContext.Provider value={{ apiKey, setApiKey }}>

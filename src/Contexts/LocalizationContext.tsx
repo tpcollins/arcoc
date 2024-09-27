@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { LocaleContextType } from '@/app/Data/Data';
+import { LocaleContextType } from '@/app/Data/DataDef';
 
 
 const LocalizationContext = createContext<LocaleContextType | undefined>(undefined);

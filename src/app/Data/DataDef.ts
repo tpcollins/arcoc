@@ -1,9 +1,21 @@
-// Form Section
+/*
+
+TABLE OF CONTENTS:
+1. Form Section
+2. Footer Section
+3. Listgroup Section
+4. Dropdown Section
+5. Contexts
+
+*/
+
+
+// 1. Form Section
 export interface FormData {
     formText: string;
 }
 
-// Footer section
+// 2. Footer section
 export interface FooterLink {
     text: string;
     url: string;
@@ -14,7 +26,7 @@ export interface FooterData {
     links: FooterLink[]; // Array of FooterLink objects
 }
 
-// Listgroup Section
+// 3. Listgroup Section
 export interface ListgroupLink {
     linkHeader: string;
 }
@@ -23,7 +35,7 @@ export interface Listgroup {
     links: ListgroupLink[]; // Array of FooterLink objects
 }
 
-// Dropdown Section
+// 4. Dropdown Section
 
 export interface DropdownItem {
     // Note regarding this interface: links is now of type generic. Any data can go in dropdown item so comp is still reusable
@@ -44,13 +56,29 @@ export interface DropdownButtons {
     flag: string;
 }
 
+export interface DropdownMenuProps<T> {
+    data: DropdownData<T>;
+    renderItem: (item: T) => React.ReactNode;
+    handleTarLangChange?: (newLocale: string) => void;
+}
+
 export interface Voice {
-    Name: string;
-    DisplayName: string;
     LocalName: string;
-    ShortName: string;
     Gender: string;
     Locale: string;
     SampleRateHertz: string;
-    VoiceType: string;
+    WordsPerMinute: string;
 }
+
+// 5. Contexts
+    // 5a. API Key Context
+    export interface ApiKeyContextType {
+        apiKey: string;
+        setApiKey: (key: string) => void;
+    };
+
+    // 5b. Locale Context
+    export interface LocaleContextType {
+        locale: string;
+        setLocale: (locale: string) => void;
+    };

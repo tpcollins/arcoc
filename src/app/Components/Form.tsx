@@ -27,6 +27,7 @@ const Form: React.FC<FormProps> = ({ data }) => {
     if (!res.ok) {
       setErrorMessage('Invalid Key');
     } else {
+      console.log(apiKey)
       router.push('/verbose');
     }
   };
