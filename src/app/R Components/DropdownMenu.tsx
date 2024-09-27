@@ -12,7 +12,6 @@
 import { Dropdown } from 'react-bootstrap';
 import { DropdownData } from '../Data/DataDef';
 import { useState, useRef, useEffect } from 'react';
-import { useApiKey } from '@/Contexts/ApiKeyContext';
 
 const DropdownMenu = <T extends { [key: string]: any }>({ data, renderItem }: { data: DropdownData<T>, renderItem: (item: T) => React.ReactNode }) => {
 
@@ -51,17 +50,16 @@ const DropdownMenu = <T extends { [key: string]: any }>({ data, renderItem }: { 
 
           {filteredData.map((item, idx) => (
             <Dropdown.Item
-            eventKey={item as any}
-            href="#/action-1"
-            key={idx}
-            onClick={
-              () => handleSelValue(item)
-            }
-            style={{
-              borderBottom: idx !== filteredData.length - 1 ? '1px solid' : 'none',
-              padding: '8px 16px',
-              width: '100%'
-            }}
+              eventKey={item as any}
+              key={idx}
+              onClick={
+                () => handleSelValue(item)
+              }
+              style={{
+                borderBottom: idx !== filteredData.length - 1 ? '1px solid' : 'none',
+                padding: '8px 16px',
+                width: '100%'
+              }}
             >
               {renderItem(item)}
             </Dropdown.Item>

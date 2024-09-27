@@ -1,3 +1,15 @@
+/* 
+TABLE OF CONTENTS:
+
+1. Form Section
+2. Footer Section
+3. Listgroup Section
+4. Dropdown Language Section
+5. Context APIs
+
+*/
+
+
 import { 
     FormData,
     FooterData,
@@ -7,19 +19,19 @@ import {
 
 import DropdownMenu from "../R Components/DropdownMenu";
 
-// Form Section
+// 1. Form Section
 export const shareKeyFormData: FormData = {
     formText: "Please Enter Your Speech Key"
 }
 
-// Footer Section
+// 2. Footer Section
 export const mainPageFooterData: FooterData = {
   links: [
     { text: "Collins Web Design LLC 2024", url: "https://tristancollins.org", imgUrl: "/icons/copyright.svg"}
   ]
 };
 
-// Listgroup Section
+// 3. Listgroup Section
 export const transPageLgData: Listgroup = {
   links: [
     {linkHeader: "Translator"},
@@ -27,7 +39,7 @@ export const transPageLgData: Listgroup = {
   ]
 }
  
-// Dropdown Language Section
+// 4. Dropdown Language Section
 export const languageList = [
   { lang: "Afrikaans", code: "af-ZA", flag: "/icons/southafrica.svg" },
   { lang: "Albanian", code: "sq-AL", flag: "/icons/albania.svg" },
@@ -184,3 +196,17 @@ export const neuralVoiceData: DropdownData<{ lang: string; flag: string }> = {
       </>
     )}
 />;
+
+// 5. Context APIs
+
+  // 5a. API Key Context
+  export type ApiKeyContextType = {
+    apiKey: string;
+    setApiKey: (key: string) => void;
+  };
+
+  // 5b. Locale Context
+  export type LocaleContextType = {
+    locale: string;
+    setLocale: (locale: string) => void;
+  };

@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { ApiKeyContextType } from '@/app/Data/Data';
 
 const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
@@ -9,11 +10,6 @@ export const useApiKey = () => {
         throw new Error('useApiKey must be used within an ApiKeyProvider');
     }
     return context;
-};
-
-type ApiKeyContextType = {
-  apiKey: string;
-  setApiKey: (key: string) => void;
 };
 
 interface ApiKeyProviderProps {
