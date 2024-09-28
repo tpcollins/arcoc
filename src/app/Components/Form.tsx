@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData } from '../Data/DataDef';
 import { useApiKey } from '@/Contexts/ApiKeyContext';
@@ -11,6 +11,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ data }) => {
   const {apiKey, setApiKey} = useApiKey();
   const [errorMessage, setErrorMessage] = useState('');
+  const [inputValue, setInputValue] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -21,14 +22,20 @@ const Form: React.FC<FormProps> = ({ data }) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ apiKey }),
+      body: JSON.stringify({ apiKey: inputValue }),
     });
 
     if (!res.ok) {
       setErrorMessage('Invalid Key');
     } else {
-      console.log(apiKey)
-      router.push('/verbose');
+      setApiKey(inputValue); // Update the context key before routing
+      console.log('API Key set to:', inputValue); // Log inputValue here
+      
+      // Add a slight delay or a callback to ensure state is set before routing
+      setTimeout(() => {
+        console.log('Navigating to verbose page...');
+        router.push('/verbose');
+      }, 100);
     }
   };
 
@@ -41,8 +48,8 @@ const Form: React.FC<FormProps> = ({ data }) => {
         <br />
         <input
           type="text"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           required
           className="form-control input-style"
         />

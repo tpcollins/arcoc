@@ -24,7 +24,7 @@ const LanguageSelection = () => {
         }));
         console.log("useEffect Locale",locale)
         console.log("voices", voices)
-        console.log(apiKey);
+        console.log("apiKey", apiKey);
         
     }, [voices, locale]);
 

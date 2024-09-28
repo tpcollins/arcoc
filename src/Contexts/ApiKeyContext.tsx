@@ -9,6 +9,7 @@ export const useApiKey = () => {
     if (context === undefined) {
         throw new Error('useApiKey must be used within an ApiKeyProvider');
     }
+    console.log('useApiKey context:', context);
     return context;
 };
 
@@ -17,7 +18,7 @@ interface ApiKeyProviderProps {
 }
 
 export const ApiKeyProvider: React.FC<ApiKeyProviderProps> = ({ children }) => {
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState<string>('');
 
   return (
     <ApiKeyContext.Provider value={{ apiKey, setApiKey }}>
@@ -25,4 +26,3 @@ export const ApiKeyProvider: React.FC<ApiKeyProviderProps> = ({ children }) => {
     </ApiKeyContext.Provider>
   );
 };
-
