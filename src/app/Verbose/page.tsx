@@ -6,7 +6,8 @@ import LanguageSelection from '../Components/LanguageSelection';
 
 import { transPageLgData } from '../Data/Data';
 import { LocalizationProvider } from '@/Contexts/LocalizationContext';
-import { ApiKeyProvider } from '@/Contexts/ApiKeyContext';
+import { Provider } from 'react-redux';
+import store from '@/store/store';
 
 const Verbose: React.FC = () => {
 
@@ -18,11 +19,12 @@ const Verbose: React.FC = () => {
                 </div>
 
                 <div className="d-flex justify-content-around w-75 mb-4">
-                    <ApiKeyProvider>
+                    <Provider store={store}>
                         <LocalizationProvider>
                             <LanguageSelection />
                         </LocalizationProvider>
-                    </ApiKeyProvider>
+                    </Provider>
+
                 </div>
             </div>
         </>

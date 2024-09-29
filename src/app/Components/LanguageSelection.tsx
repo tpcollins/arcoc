@@ -1,14 +1,18 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import DropdownMenu from '../R Components/DropdownMenu';
 import { useLocale } from '@/Contexts/LocalizationContext';
 import { useVoices } from '@/Custom Hooks/useVoices';
 import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
-import { useApiKey } from '@/Contexts/ApiKeyContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 const LanguageSelection = () => {
     const { locale, setLocale } = useLocale();
-    const {apiKey} = useApiKey();
+    
+    // Using Redux to get the API key
+    const apiKey = useSelector((state: RootState) => state.apiKey.apiKey); 
+    
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
 
@@ -17,16 +21,19 @@ const LanguageSelection = () => {
     };
 
     useEffect(() => {
-        // When voices are fetched, update the links in dropdownData
-        setDropdownData(prevData => ({
-            ...prevData,
-            voices
-        }));
-        console.log("useEffect Locale",locale)
-        console.log("voices", voices)
-        console.log("apiKey", apiKey);
-        
-    }, [voices, locale]);
+        if (voices && voices.links) {
+          setDropdownData({
+            ...dropdownData, // Keep the existing structure of dropdownData
+            links: voices.links.map(voice => ({
+              lang: voice.LocalName,
+              flag: `/icons/Flags/${voice.Locale}.svg`
+            }))
+          });
+        }
+        console.log("useEffect Locale", locale);
+        console.log("Voices", voices);
+        console.log("API Key from Redux", apiKey);
+      }, [voices, locale]);
 
   return (
     <>

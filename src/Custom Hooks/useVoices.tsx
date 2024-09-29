@@ -4,7 +4,7 @@ import { DropdownData,Voice } from '@/app/Data/DataDef';
 
 export const useVoices = (locale: string, apiKey: string) => {
     const [voices, setVoices] = useState<DropdownData<Voice>>({ 
-        btnDrpDwnTxt: "Select a Voice", 
+        btnDrpDwnTxt: "Neural Voices", 
         links: [], 
         config: { displayText: 'LocalName', renderItemText: 'LocalName' } 
     });

@@ -1,15 +1,17 @@
 
 import { AppProps } from 'next/app';
-import { ApiKeyProvider } from '@/Contexts/ApiKeyContext';
 import { LocalizationProvider } from '@/Contexts/LocalizationContext';
+
+import { Provider } from 'react-redux';
+import store from '@/store/store';
 
 function MyApp({Component, pageProps}: AppProps) {
     return (
-        <ApiKeyProvider>
+        <Provider store={store}>
             <LocalizationProvider>
                 <Component {...pageProps} />
             </LocalizationProvider>
-        </ApiKeyProvider>
+        </Provider>
     );
 }
 
