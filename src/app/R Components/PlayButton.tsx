@@ -8,13 +8,11 @@ const PlayButton: React.FC<PlaybuttonProps> = ({ action }) => {
   // Toggle between play and pause
   const handleToggle = () => {
     setIsPlaying(!isPlaying);
-  };
 
-  const handleAction = () => {
     if (action && isPlaying){
       action();
     }
-  }
+  };
 
   return (
     <button 
