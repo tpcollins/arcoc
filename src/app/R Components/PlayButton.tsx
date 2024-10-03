@@ -5,7 +5,7 @@ const PlayButton: React.FC = () => {
 
   // Toggle between play and pause
   const handleToggle = () => {
-    setIsPlaying((prevState) => !prevState); // Toggle state
+    setIsPlaying(!isPlaying); // Toggle state
   };
 
   return (
