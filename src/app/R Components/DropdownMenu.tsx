@@ -1,12 +1,3 @@
-// TODO:
-/*
-1. Fetch neural voices through API; match by target language locale
-2. Explain outloud (a few times if necessary) everything that is going on in the component since most of this is new
-3. Start the backend processes
-
-*/
-
-
 "use client";
 
 import { Dropdown } from 'react-bootstrap';

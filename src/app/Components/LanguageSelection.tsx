@@ -138,7 +138,9 @@ const LanguageSelection = () => {
             />
 
             <div className="mt-4">
-                <PlayButton />
+                <PlayButton 
+                action={startContinuousTranslation}
+                />
             </div>
         </div>
 

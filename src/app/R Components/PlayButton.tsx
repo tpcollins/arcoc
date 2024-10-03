@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
+import { PlaybuttonProps } from '../Data/DataDef';
 
-const PlayButton: React.FC = () => {
+const PlayButton: React.FC<PlaybuttonProps> = ({ action }) => {
+
   const [isPlaying, setIsPlaying] = useState(false); // State to track play/pause
 
   // Toggle between play and pause
   const handleToggle = () => {
-    setIsPlaying(!isPlaying); // Toggle state
+    setIsPlaying(!isPlaying);
   };
+
+  const handleAction = () => {
+    if (action && isPlaying){
+      action();
+    }
+  }
 
   return (
     <button 

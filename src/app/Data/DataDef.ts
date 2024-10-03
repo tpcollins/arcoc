@@ -6,6 +6,7 @@ TABLE OF CONTENTS:
 3. Listgroup Section
 4. Dropdown Section
 5. Contexts
+6. Playbutton Section
 
 */
 
@@ -82,3 +83,8 @@ export interface Voice {
         locale: string;
         setLocale: (locale: string) => void;
     };
+
+// 6. Playbutton Section
+export interface PlaybuttonProps {
+    action?: () => void;
+}
