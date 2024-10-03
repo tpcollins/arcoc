@@ -6,6 +6,7 @@ import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
+import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 
 const LanguageSelection = () => {
     const { locale, setLocale } = useLocale();

@@ -14,6 +14,7 @@
     "@types/bootstrap": "^5.2.10",
     "@types/popper.js": "^1.11.0",
     "bootstrap": "5.3.3",
+    "microsoft-cognitiveservices-speech-sdk": "^1.40.0",
     "next": "14.2.9",
     "rc-slider": "^11.1.5",
     "react": "^18",
