@@ -45,7 +45,7 @@ const LanguageSelection = () => {
             console.log("useEffect Locale", locale);
             console.log("Voices", voices);
             console.log("API Key from Redux", apiKey);
-            }, [voices, locale]);
+        }, [voices, locale]);
 
         const startContinuousTranslation = () => {
             const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
