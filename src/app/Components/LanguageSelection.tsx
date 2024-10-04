@@ -21,14 +21,22 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 
 const LanguageSelection = () => {
     const { locale, setLocale } = useLocale();
+    const { tarLocale, setTarLocale } = useLocale();
     // Using Redux to get the API key
     const apiKey = useSelector((state: RootState) => state.apiKey.apiKey);
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
+    const [shortName, setShortName] = useState('');
 
 
-    const handleTarLangChange = (newLocale: string) => {
+    const handleTarLang = (newLocale: string, newTarLocale: string) => {
         setLocale(newLocale);  // Update the locale in the context, which will trigger the useVoices hook
+        setTarLocale(newTarLocale);
+    };
+
+    const handleShortName = (newShortName: string) => {
+        setShortName(newShortName);
+        console.log()
     };
 
     useEffect(() => {
@@ -36,15 +44,23 @@ const LanguageSelection = () => {
             setDropdownData({
                 ...dropdownData, // Keep the existing structure of dropdownData
                 links: voices.links.map(voice => ({
+                    shortName: voice.ShortName,
                     lang: voice.LocalName,
                     flag: `/icons/Flags/${voice.Locale}.svg`
                 }))
             });
         }
         console.log("useEffect Locale", locale);
+        console.log("useEffect tarLocale", tarLocale);
+        // console.log("useEffect shortName", dropdownData.shor)
         console.log("Voices", voices);
         console.log("API Key from Redux", apiKey);
-    }, [voices, locale]);
+
+    }, [voices, locale, tarLocale]);
+
+    useEffect(() => {
+        console.log("Updated shortName:", shortName); // Correctly logs after update
+      }, [shortName]);
 
     const startContinuousTranslation = () => {
         // Step 1: Initialize speech translation config
@@ -55,8 +71,8 @@ const LanguageSelection = () => {
     
         // Set up translation languages and voice
         speechConfig.speechRecognitionLanguage = "en-US";  // Source language (English)
-        speechConfig.addTargetLanguage("es");              // Target language (Spanish)
-        speechConfig.voiceName = "es-ES-AlvaroNeural";     // Neural voice for Spanish
+        speechConfig.addTargetLanguage(tarLocale);              // Target language
+        speechConfig.voiceName = shortName;     // Neural voice for Spanish
     
         // Step 2: Configure input (microphone)
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
@@ -67,7 +83,7 @@ const LanguageSelection = () => {
         // Step 4: Handle recognition results (when translation is completed)
         translator.recognized = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
-                const translatedText = e.result.translations.get("es");
+                const translatedText = e.result.translations.get(tarLocale);
                 console.log(`Translated Text: ${translatedText}`);
                 
                 // Call the speech synthesis function to convert translated text to speech
@@ -133,7 +149,7 @@ const LanguageSelection = () => {
         <div className="d-flex flex-column align-items-center">
             <DropdownMenu
                 data={targetLangData}
-                handleTarLangChange={handleTarLangChange}
+                handleTarLang={handleTarLang}
                 renderItem={(item) => (
                     <div style={{ 
                         alignItems: 'center',
@@ -161,6 +177,7 @@ const LanguageSelection = () => {
 
         <DropdownMenu 
             data={dropdownData} 
+            handleShortName={handleShortName}
             renderItem={(item) => (
                 <div
                 style={{

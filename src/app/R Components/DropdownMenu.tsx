@@ -7,7 +7,8 @@ import { useState, useRef, useEffect } from 'react';
 const DropdownMenu = <T extends { [key: string]: any }>({
   data,
   renderItem,
-  handleTarLangChange,
+  handleTarLang,
+  handleShortName,
 }: DropdownMenuProps<T>) => {
 
   const [filter, setFilter] = useState('');
@@ -19,19 +20,24 @@ const DropdownMenu = <T extends { [key: string]: any }>({
     if (isOpen && inputRef.current) inputRef.current.focus();
   },[isOpen]);
 
-  const handleSelect = (item: T) => {
-    if (handleTarLangChange) {
-      handleTarLangChange(item as unknown as string);
+  const handleTargetLangChange = <T1, T2>(item1: T1, item2: T2) => {
+    if (handleTarLang) {
+      handleTarLang(item1 as unknown as string, item2 as unknown as string);
     }
-    
+  };
+
+  const handleShortNameChange = (item: T) => {
+    console.log("handle short name change triggered")
+    if (handleShortName) {
+      console.log("handle short name triggered")
+      handleShortName(item as unknown as string);
+    }
   };
 
   const handleSelValue = (item: T) =>{
     setSelValue(item[data.config.displayText] as string);
     setIsOpen(false);
   }
-
-  
 
   const filteredData = data.links.filter(item => item[data.config.renderItemText].toLowerCase().includes(filter.toLowerCase()));
 
@@ -58,7 +64,8 @@ const DropdownMenu = <T extends { [key: string]: any }>({
               key={idx}
               onClick={async () => {
                 await handleSelValue(item);
-                handleSelect(item.code);
+                handleTargetLangChange(item.code, item.tarCode);
+                handleShortNameChange(item.shortName);
               }}
               style={{
                 borderBottom: idx !== filteredData.length - 1 ? '1px solid' : 'none',

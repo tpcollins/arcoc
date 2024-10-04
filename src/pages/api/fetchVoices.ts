@@ -22,6 +22,7 @@ export const fetchVoices = async (locale: string, apiKey: string): Promise<Dropd
         btnDrpDwnTxt: "Select a Voice",
         links: filteredVoices.map(voice => ({
             LocalName: voice.LocalName,
+            ShortName: voice.ShortName,
             Gender: voice.Gender,
             Locale: voice.Locale,
             SampleRateHertz: voice.SampleRateHertz,

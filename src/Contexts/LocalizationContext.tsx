@@ -17,9 +17,10 @@ interface LocalizationProviderProps {
 }
 export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ children }) => {
   const [locale, setLocale] = useState('');
+  const [tarLocale, setTarLocale] = useState('');
 
   return (
-    <LocalizationContext.Provider value={{ locale, setLocale }}>
+    <LocalizationContext.Provider value={{ locale, setLocale, tarLocale, setTarLocale }}>
       {children}
     </LocalizationContext.Provider>
   );

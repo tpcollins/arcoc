@@ -60,11 +60,13 @@ export interface DropdownButtons {
 export interface DropdownMenuProps<T> {
     data: DropdownData<T>;
     renderItem: (item: T) => React.ReactNode;
-    handleTarLangChange?: (newLocale: string) => void;
+    handleTarLang?: (newLocale: string, newVoiceLocale: string) => void;
+    handleShortName?: (newShortName: string) => void;
 }
 
 export interface Voice {
     LocalName: string;
+    ShortName: string;
     Gender: string;
     Locale: string;
     SampleRateHertz: string;
@@ -81,7 +83,9 @@ export interface Voice {
     // 5b. Locale Context
     export interface LocaleContextType {
         locale: string;
+        tarLocale: string;
         setLocale: (locale: string) => void;
+        setTarLocale: (tarLocale: string) => void;
     };
 
 // 6. Playbutton Section
