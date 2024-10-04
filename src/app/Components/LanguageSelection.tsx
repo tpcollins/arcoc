@@ -2,10 +2,9 @@
 
 TODO:
 1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK")
-2. Setup application to work with drop down menu
-3. Test application with variables from dropdown menu (might need to set localization up with redux)
-4. If everything is working set source language to default english 
-5. Start working on glitches and bugs
+2. Test application with variables from dropdown menu (might need to set localization up with redux)
+3. If everything is working set source language to default english 
+4. Start working on glitches and bugs (this will require a separate list)
 
 */
 
