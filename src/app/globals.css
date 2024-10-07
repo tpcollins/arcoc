@@ -49,9 +49,6 @@ body {
 }
 
 /* 3. List Group Styles */
-/* #lgTextStyle{
-  color: white;
-} */
 
 .list-group-item {
   outline: none !important;
@@ -76,8 +73,28 @@ body {
 }
 
 /* 4. Dropdown Button Styles */
-.drpdwnBtnStyle{
+/* .drpdwnBtnStyle{
   color:beige !important;
   outline: none !important;
   border: none !important;
+} */
+
+.drpdownBtnStyle {
+  color: beige !important;
+  outline: none !important;
+  border: none !important;
+  width: 300px; /* Set a fixed width */
+  text-align: center; /* Center the text */
+}
+
+button.btn {
+  width: 300px;
+  text-align: center;
+}
+
+/* 5. Playbutton Styles */
+.playButtonContainer {
+  margin-top: 20px; /* Adjust this as necessary */
+  display: flex;
+  justify-content: center;
 }

@@ -5,12 +5,27 @@ TODO:
 ^^^^^ Not going to have this in the MVP. Leaving this here so I know the chat log that it is in. Will -
 - implement in later iteration
 
-1. Test as many languages as possible once this is implemented
-^^^ Waiting to hear back from Patrick on this. Start TODO2
+1. Test Spanish and Chinese
 
-2. If everything is working set source language to default english 
+2. Start working on glitches and bugs (list below)
 
-3. Start working on glitches and bugs (this will require a separate list)
+*/
+
+
+/*
+
+BUG LIST SO FAR:
+1. Playbutton gets confused if you do not select target language and neural voice before using. Need to make it -
+- unclickable when those two are not yet selected
+
+2. Play button must be started, stopped, then started again before the microphone is recognized and translation will -
+- work. Probably can be helped with the isPlaying variable
+
+3. Translation does not stop when playbutton is clicked again. Can probably fix this by sending up the isPlaying -
+- variable and then running it through the continous translation function
+
+4. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
+- or upon sitting on the page too long
 
 */
 
@@ -18,7 +33,7 @@ import React, { useState, useEffect } from 'react';
 import DropdownMenu from '../R Components/DropdownMenu';
 import { useLocale } from '@/Contexts/LocalizationContext';
 import { useVoices } from '@/Custom Hooks/useVoices';
-import { sourceLangData, targetLangData, neuralVoiceData } from '../Data/Data';
+import { targetLangData, neuralVoiceData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -27,11 +42,11 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 const LanguageSelection = () => {
     const { locale, setLocale } = useLocale();
     const { tarLocale, setTarLocale } = useLocale();
-    // Using Redux to get the API key
-    const apiKey = useSelector((state: RootState) => state.apiKey.apiKey);
+    const apiKey = useSelector((state: RootState) => state.apiKey.apiKey); // Using Redux to get the API key
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
     const [shortName, setShortName] = useState('');
+    const [isSourceLang, setIsSourceLang] = useState(false);
 
 
     const handleTarLang = (newLocale: string, newTarLocale: string) => {
@@ -128,82 +143,50 @@ const LanguageSelection = () => {
 
     return (
     <>
-      <DropdownMenu 
-        data={sourceLangData} 
-        renderItem={(item) => (
-            <div
-            style={{
-                alignItems: 'center', 
-                display: 'flex', 
-                width: '100%'
-            }}
-            >
-                <img 
-                alt="File icon"
-                aria-hidden
-                height={16}
-                src={item.flag}
-                style={{paddingRight: '5px'}}
-                width={16}
+        <div className="d-flex flex-column align-items-center mt-4">
+            <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
+                <DropdownMenu
+                    data={targetLangData}
+                    handleTarLang={handleTarLang}
+                    renderItem={(item) => (
+                        <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
+                            <img
+                                alt="File icon"
+                                aria-hidden
+                                height={16}
+                                src={item.flag}
+                                style={{ paddingRight: '5px' }}
+                                width={16}
+                            />
+                            {item.lang}
+                        </div>  
+                    )}
                 />
-                {item.lang}
-            </div>
-            )}
-        />
 
-        <div className="d-flex flex-column align-items-center">
-            <DropdownMenu
-                data={targetLangData}
-                handleTarLang={handleTarLang}
-                renderItem={(item) => (
-                    <div style={{ 
-                        alignItems: 'center',
-                        display: 'flex',
-                        width: '100%' }}>
-                        <img
-                            alt="File icon"
-                            aria-hidden
-                            height={16}
-                            src={item.flag}
-                            style={{ paddingRight: '5px' }}
-                            width={16}
-                        />
-                        {item.lang}
-                    </div>
-                )}
-            />
-
-            <div className="mt-4">
-                <PlayButton 
-                action={startContinuousTranslation}
+                <DropdownMenu
+                    data={dropdownData} 
+                    handleShortName={handleShortName}
+                    renderItem={(item) => (
+                        <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
+                            <img
+                                alt="File icon"
+                                aria-hidden
+                                height={16}
+                                src={item.flag}
+                                style={{ paddingRight: '5px' }}
+                                width={16}
+                            />
+                            {item.lang}
+                        </div>
+                    )}
                 />
             </div>
-        </div>
 
-        <DropdownMenu 
-            data={dropdownData} 
-            handleShortName={handleShortName}
-            renderItem={(item) => (
-                <div
-                style={{
-                    alignItems: 'center', 
-                    display: 'flex', 
-                    width: '100%'
-                }}
-                >
-                    <img 
-                        
-                    alt="File icon"
-                    aria-hidden
-                    height={16}
-                    src={item.flag}
-                    style={{paddingRight: '5px'}}
-                    width={16}
-                    />
-                    {item.lang}
+                <div>
+                    <PlayButton action={startContinuousTranslation} />
                 </div>
-            )}
-        />
+            </div>
+
     </>
   );
 };

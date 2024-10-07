@@ -3,6 +3,7 @@
 import { Dropdown } from 'react-bootstrap';
 import { DropdownMenuProps } from '../Data/DataDef';
 import { useState, useRef, useEffect } from 'react';
+import { sourceLangData } from '../Data/Data';
 
 const DropdownMenu = <T extends { [key: string]: any }>({
   data,
@@ -27,9 +28,7 @@ const DropdownMenu = <T extends { [key: string]: any }>({
   };
 
   const handleShortNameChange = (item: T) => {
-    console.log("handle short name change triggered")
     if (handleShortName) {
-      console.log("handle short name triggered")
       handleShortName(item as unknown as string);
     }
   };
@@ -45,7 +44,7 @@ const DropdownMenu = <T extends { [key: string]: any }>({
     <>
       <Dropdown show={isOpen} onToggle={(isOpen) => setIsOpen(isOpen)}>
         <Dropdown.Toggle id="dropdown-basic">
-          {selValue || data.btnDrpDwnTxt} 
+          {selValue || data.btnDrpDwnTxt}
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
