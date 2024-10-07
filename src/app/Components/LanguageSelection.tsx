@@ -1,9 +1,17 @@
 /*
 
 TODO:
-1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK")
-2. Test application with variables from dropdown menu (might need to set localization up with redux)
+1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK") 
+^^^^^ Not going to have this in the MVP. Leaving this here so I know the chat log that it is in. Will -
+- implement in later iteration
+
+1. Go through voice list api and remove languages that do not support speech to speech (i.e no neural voices or -
+- only speech to text)
+
+2. Test as many languages as possible once this is implemented
+
 3. If everything is working set source language to default english 
+
 4. Start working on glitches and bugs (this will require a separate list)
 
 */
@@ -67,18 +75,18 @@ const LanguageSelection = () => {
             apiKey as string,      // Azure Speech API key
             'eastus2' as string    // Azure Speech region
         );
-    
+
         // Set up translation languages and voice
         speechConfig.speechRecognitionLanguage = "en-US";  // Source language (English)
         speechConfig.addTargetLanguage(tarLocale);              // Target language
         speechConfig.voiceName = shortName;     // Neural voice for Spanish
-    
+
         // Step 2: Configure input (microphone)
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    
+
         // Step 3: Initialize translation recognizer
         const translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-    
+
         // Step 4: Handle recognition results (when translation is completed)
         translator.recognized = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
@@ -89,12 +97,12 @@ const LanguageSelection = () => {
                 synthesizeSpeech(translatedText || "");
             }
         };
-    
+
         // Step 5: Start continuous recognition
         translator.startContinuousRecognitionAsync(() => {
             console.log("Continuous recognition started");
         });
-    
+
         // Speech synthesis function to output the translated text as neural speech
         const synthesizeSpeech = (text: string) => {
             // Reuse the speech config for synthesis
@@ -102,13 +110,13 @@ const LanguageSelection = () => {
                 apiKey as string, 
                 'eastus2' as string
             );
-    
+
             // Set output audio configuration (default speakers)
             const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-    
+
             // Initialize synthesizer with speech config and audio output
             const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-    
+
             // Synthesize the translated text into neural speech
             synthesizer.speakTextAsync(text, result => {
                 if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
@@ -120,7 +128,7 @@ const LanguageSelection = () => {
         };
     };
 
-  return (
+    return (
     <>
       <DropdownMenu 
         data={sourceLangData} 
