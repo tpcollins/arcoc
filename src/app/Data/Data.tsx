@@ -115,6 +115,10 @@ export const languageList = [
   { lang: "Welsh", code: "cy-GB", tarCode: "cy", flag: "/icons/Flags/cy-GB.svg" }
 ];
 
+const sourceLangList = [
+  { lang: "English", code: "en-US", tarCode: "en", flag: "/icons/Flags/en-US.svg" }
+]
+
 export const targetLangData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Target Language",
   links: languageList,
@@ -136,7 +140,7 @@ export const targetLangData: DropdownData<{ lang: string; flag: string }> = {
 
 export const sourceLangData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Source Language",
-  links: languageList,
+  links: sourceLangList,
   config: {
     displayText: 'lang',
     renderItemText: 'lang'
@@ -151,7 +155,7 @@ export const sourceLangData: DropdownData<{ lang: string; flag: string }> = {
         {item.lang}
       </>
     )}
-/>;
+  />;
 
 export const neuralVoiceData: DropdownData<{ lang: string; flag: string }> = {
   btnDrpDwnTxt: "Neural Voice",
