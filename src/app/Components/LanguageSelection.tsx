@@ -1,34 +1,24 @@
 /*
 
-TODO:
+NON-MVP TODO:
 1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK") 
 ^^^^^ Not going to have this in the MVP. Leaving this here so I know the chat log that it is in. Will -
 - implement in later iteration
-
-1. Test Spanish and Chinese
-
-2. Start working on glitches and bugs (list below)
 
 */
 
 
 /*
-
+TODO: BUG LIST
 BUG LIST SO FAR:
 
 1. Playbutton gets confused if you do not select target language and neural voice before using. Need to make it -
 - unclickable when those two are not yet selected
 
-2. Play button must be started, stopped, then started again before the microphone is recognized and translation will -
-- work. Probably can be helped with the isPlaying variable
-
-3. Translation does not stop when playbutton is clicked again. Can probably fix this by sending up the isPlaying -
-- variable and then running it through the continous translation function
-
-4. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
+2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
 
-5. If you try to change the voice after setting it, it does not reflect this change. It will stay on the same voice
+3. If you try to change the voice after setting it, it does not reflect this change. It will stay on the same voice
 
 
 */
@@ -37,7 +27,7 @@ import React, { useState, useEffect } from 'react';
 import DropdownMenu from '../R Components/DropdownMenu';
 import { useLocale } from '@/Contexts/LocalizationContext';
 import { useVoices } from '@/Custom Hooks/useVoices';
-import { targetLangData, neuralVoiceData } from '../Data/Data';
+import { targetLangData, neuralVoiceData, plyBtnData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -46,6 +36,7 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 const LanguageSelection = () => {
     const { locale, setLocale } = useLocale();
     const { tarLocale, setTarLocale } = useLocale();
+    const requiredFields = [locale, tarLocale];
     const apiKey = useSelector((state: RootState) => state.apiKey.apiKey); // Using Redux to get the API key
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
@@ -113,7 +104,7 @@ const LanguageSelection = () => {
         // Set up translation languages and voice
         speechConfig.speechRecognitionLanguage = "en-US";  // Source language (English)
         speechConfig.addTargetLanguage(tarLocale);              // Target language
-        speechConfig.voiceName = shortName;     // Neural voice for Spanish
+        speechConfig.voiceName = shortName;     // Neural voice
 
         // Step 2: Configure input (microphone)
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
@@ -208,7 +199,9 @@ const LanguageSelection = () => {
             <div>
                 <PlayButton
                 isPlaying={isPlaying}
-                setIsPlaying={setIsPlaying} 
+                setIsPlaying={setIsPlaying}
+                requiredFields={requiredFields}
+                data={plyBtnData}
                 />
             </div>
             

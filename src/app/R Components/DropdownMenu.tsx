@@ -3,7 +3,6 @@
 import { Dropdown } from 'react-bootstrap';
 import { DropdownMenuProps } from '../Data/DataDef';
 import { useState, useRef, useEffect } from 'react';
-import { sourceLangData } from '../Data/Data';
 
 const DropdownMenu = <T extends { [key: string]: any }>({
   data,

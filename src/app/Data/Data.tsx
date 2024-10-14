@@ -5,6 +5,7 @@ TABLE OF CONTENTS:
 2. Footer Section
 3. Listgroup Section
 4. Dropdown Language Section
+5. Playbutton Section
 
 */
 
@@ -13,7 +14,8 @@ import {
     FormData,
     FooterData,
     Listgroup,
-    DropdownData
+    DropdownData,
+    PlaybuttonData
 } from "./DataDef";
 
 import DropdownMenu from "../R Components/DropdownMenu";
@@ -183,3 +185,7 @@ export const neuralVoiceData: DropdownData<{ lang: string; flag: string }> = {
       </>
     )}
 />;
+
+export const plyBtnData: PlaybuttonData<string> = {
+  errorMessage: "Please make sure you have selected a target language and neural voice"
+}
