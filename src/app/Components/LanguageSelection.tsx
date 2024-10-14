@@ -30,6 +30,7 @@ BUG LIST SO FAR:
 
 5. If you try to change the voice after setting it, it does not reflect this change. It will stay on the same voice
 
+
 */
 
 import React, { useState, useEffect } from 'react';
@@ -49,7 +50,9 @@ const LanguageSelection = () => {
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
     const [shortName, setShortName] = useState('');
-    const [isSourceLang, setIsSourceLang] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    let translator: SpeechSDK.TranslationRecognizer;
+    
 
 
     const handleTarLang = (newLocale: string, newTarLocale: string) => {
@@ -83,7 +86,22 @@ const LanguageSelection = () => {
 
     useEffect(() => {
         console.log("Updated shortName:", shortName); // Correctly logs after update
-      }, [shortName]);
+    }, [shortName]);
+
+    useEffect(() => {
+        if (isPlaying) {
+            translator = startContinuousTranslation();
+        } else if (translator) {
+            translator.stopContinuousRecognitionAsync(() => {
+                console.log("Continuous recognition stopped");
+            });
+        }
+
+        return () => {
+            // Ensure cleanup on unmount
+            translator?.stopContinuousRecognitionAsync();
+        };
+    }, [isPlaying]);
 
     const startContinuousTranslation = () => {
         // Step 1: Initialize speech translation config
@@ -101,7 +119,7 @@ const LanguageSelection = () => {
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
 
         // Step 3: Initialize translation recognizer
-        const translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
+        translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
 
         // Step 4: Handle recognition results (when translation is completed)
         translator.recognized = (s, e) => {
@@ -142,6 +160,8 @@ const LanguageSelection = () => {
                 }
             });
         };
+
+        return translator;
     };
 
     return (
@@ -185,11 +205,14 @@ const LanguageSelection = () => {
                 />
             </div>
 
-                <div>
-                    <PlayButton action={startContinuousTranslation} />
-                </div>
+            <div>
+                <PlayButton
+                isPlaying={isPlaying}
+                setIsPlaying={setIsPlaying} 
+                />
             </div>
-
+            
+        </div>
     </>
   );
 };

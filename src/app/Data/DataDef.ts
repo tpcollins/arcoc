@@ -90,5 +90,6 @@ export interface Voice {
 
 // 6. Playbutton Section
 export interface PlaybuttonProps {
-    action?: () => void;
+    isPlaying: boolean;
+    setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 }
