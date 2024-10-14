@@ -15,6 +15,7 @@ TODO:
 /*
 
 BUG LIST SO FAR:
+
 1. Playbutton gets confused if you do not select target language and neural voice before using. Need to make it -
 - unclickable when those two are not yet selected
 
@@ -26,6 +27,8 @@ BUG LIST SO FAR:
 
 4. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
+
+5. If you try to change the voice after setting it, it does not reflect this change. It will stay on the same voice
 
 */
 
