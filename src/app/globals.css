@@ -98,3 +98,12 @@ button.btn {
   display: flex;
   justify-content: center;
 }
+
+.alertMessage {
+  color: red;
+  visibility: hidden; /* Initially hidden */
+}
+
+.alertMessage.show {
+  visibility: visible; /* Only show when the alert is triggered */
+}

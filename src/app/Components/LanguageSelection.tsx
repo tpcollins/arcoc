@@ -12,8 +12,10 @@ NON-MVP TODO:
 TODO: BUG LIST
 BUG LIST SO FAR:
 
-1. Playbutton gets confused if you do not select target language and neural voice before using. Need to make it -
-- unclickable when those two are not yet selected
+1. Playbutton will not allow user to click it before choosing target language and neural voice. 2 problems still need -
+- to be addressed though:
+    1a. If one field is selected and not the other it still allows a click which messes up the program
+    1b. Error message needs to be centered and not beside button, causing button to move
 
 2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
