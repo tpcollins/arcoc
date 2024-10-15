@@ -20,7 +20,7 @@ BUG LIST SO FAR:
 2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
 
-3. If you try to change the voice after setting it, it does not reflect this change. It will stay on the same voice
+3. Need to make dropdowns unclickable when program is actively translating
 
 
 */
