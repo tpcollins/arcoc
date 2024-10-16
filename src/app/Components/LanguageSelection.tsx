@@ -17,7 +17,7 @@ BUG LIST SO FAR:
 
 3. Need to make dropdowns unclickable when program is actively translating
     i. Created isDrpDwnDisabled variables. Gets set to true in the useEffect that determines conditions for isPlaying. -
-    - isPlaying needs to be passed into the DropdownMenu comp to disable dropdown toggles when isDrpDwnDisabled is -
+    - isDrpDwnDisabled needs to be passed into the DropdownMenu comp to disable dropdown toggles when isDrpDwnDisabled is -
     - set to true.
     
     3a. Create error message for clicking on drop down toggles when translating using the variables described above.
@@ -91,22 +91,26 @@ const LanguageSelection = () => {
 
     useEffect(() => {
         if (isPlaying) {
-            setIsDrpDwnDisabled(true);
             translator = startContinuousTranslation();
-        } else if (translator) {
             setIsDrpDwnDisabled(true);
+        } else if (translator) {
             translator.stopContinuousRecognitionAsync(() => {
                 console.log("Continuous recognition stopped");
             });
         }
 
+        if(!isPlaying){
+            setIsDrpDwnDisabled(false);
+        }
+        
+
         return () => {
             // Ensure cleanup on unmount
             translator?.stopContinuousRecognitionAsync();
         };
-    }, [isPlaying]);
+    }, [isPlaying, isDrpDwnDisabled]);
 
-    const startContinuousTranslation = () => {
+    const startContinuousTranslation = () => {   
         // Step 1: Initialize speech translation config
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,      // Azure Speech API key
@@ -174,6 +178,7 @@ const LanguageSelection = () => {
                 <DropdownMenu
                     data={targetLangData}
                     handleTarLang={handleTarLang}
+                    isDisabled={isDrpDwnDisabled}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img
@@ -192,6 +197,7 @@ const LanguageSelection = () => {
                 <DropdownMenu
                     data={dropdownData} 
                     handleShortName={handleShortName}
+                    isDisabled={isDrpDwnDisabled}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img

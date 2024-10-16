@@ -62,6 +62,7 @@ export interface DropdownMenuProps<T> {
     renderItem: (item: T) => React.ReactNode;
     handleTarLang?: (newLocale: string, newVoiceLocale: string) => void;
     handleShortName?: (newShortName: string) => void;
+    isDisabled?: Boolean;
 }
 
 export interface Voice {

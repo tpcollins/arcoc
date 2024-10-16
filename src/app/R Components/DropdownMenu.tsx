@@ -9,6 +9,7 @@ const DropdownMenu = <T extends { [key: string]: any }>({
   renderItem,
   handleTarLang,
   handleShortName,
+  isDisabled
 }: DropdownMenuProps<T>) => {
 
   const [filter, setFilter] = useState('');
@@ -43,6 +44,7 @@ const DropdownMenu = <T extends { [key: string]: any }>({
     <>
       <Dropdown show={isOpen} onToggle={(isOpen) => setIsOpen(isOpen)}>
         <Dropdown.Toggle 
+        disabled={isDisabled ? true : false}
         id="dropdown-basic">
           {selValue || data.btnDrpDwnTxt}
         </Dropdown.Toggle>
