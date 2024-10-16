@@ -39,6 +39,12 @@ const PlayButton = <T extends { [key: string]: any }>({
       className='playButtonContainer'
       >
 
+        {showAlert && (
+          <div className={`alertMessage ${showAlert ? 'show' : ''}`}>
+            {data.errorMessage}
+          </div>
+        )}
+
         <button 
           onClick={handleClick} 
           style={{ 
@@ -77,11 +83,6 @@ const PlayButton = <T extends { [key: string]: any }>({
           )}
         </button>
 
-        {showAlert && (
-          <div className={`alertMessage ${showAlert ? 'show' : ''}`}>
-            {data.errorMessage}
-          </div>
-        )}
       </div>
     </>
   );

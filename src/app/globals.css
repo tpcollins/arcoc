@@ -73,12 +73,6 @@ body {
 }
 
 /* 4. Dropdown Button Styles */
-/* .drpdwnBtnStyle{
-  color:beige !important;
-  outline: none !important;
-  border: none !important;
-} */
-
 .drpdownBtnStyle {
   color: beige !important;
   outline: none !important;
@@ -97,11 +91,14 @@ button.btn {
   margin-top: 20px; /* Adjust this as necessary */
   display: flex;
   justify-content: center;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: center;    /* Align content in the center */
 }
 
 .alertMessage {
   color: red;
   visibility: hidden; /* Initially hidden */
+  margin-bottom: 10px; /* Adds space between the alert and the button */
 }
 
 .alertMessage.show {
