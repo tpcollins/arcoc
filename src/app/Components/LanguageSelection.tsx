@@ -14,13 +14,16 @@ BUG LIST SO FAR:
 
 1. Playbutton will not allow user to click it before choosing target language and neural voice. 2 problems still need -
 - to be addressed though:
-    1a. If one field is selected and not the other it still allows a click which messes up the program
     1b. Error message needs to be centered and not beside button, causing button to move
 
 2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
 
 3. Need to make dropdowns unclickable when program is actively translating
+
+4. If user selects new language then the voice button should refresh (not say the previously spoken voice). If we can -
+- figure out #3 first then we can probably just use the same variable we use to make the button unclickable to refresh -
+- the voice locale 
 
 
 */
@@ -38,11 +41,12 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 const LanguageSelection = () => {
     const { locale, setLocale } = useLocale();
     const { tarLocale, setTarLocale } = useLocale();
-    const requiredFields = [locale, tarLocale];
     const apiKey = useSelector((state: RootState) => state.apiKey.apiKey); // Using Redux to get the API key
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
     const [shortName, setShortName] = useState('');
+    // const [shortName, setShortName] = useState('');
+    const requiredFields = [tarLocale, shortName];
     const [isPlaying, setIsPlaying] = useState(false);
     let translator: SpeechSDK.TranslationRecognizer;
     
