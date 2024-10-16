@@ -12,14 +12,17 @@ NON-MVP TODO:
 TODO: BUG LIST
 BUG LIST SO FAR:
 
-1. Playbutton will not allow user to click it before choosing target language and neural voice. 2 problems still need -
-- to be addressed though:
-    1b. Error message needs to be centered and not beside button, causing button to move
-
 2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
 
 3. Need to make dropdowns unclickable when program is actively translating
+    i. Created isDrpDwnDisabled variables. Gets set to true in the useEffect that determines conditions for isPlaying. -
+    - isPlaying needs to be passed into the DropdownMenu comp to disable dropdown toggles when isDrpDwnDisabled is -
+    - set to true.
+    
+    3a. Create error message for clicking on drop down toggles when translating using the variables described above.
+    3b. Make error message go away when translator stops and when user clicks anywhere on screen after trying to -
+    - change language or neural voice while translating
 
 4. If user selects new language then the voice button should refresh (not say the previously spoken voice). If we can -
 - figure out #3 first then we can probably just use the same variable we use to make the button unclickable to refresh -
@@ -45,6 +48,7 @@ const LanguageSelection = () => {
     const voices = useVoices(locale, apiKey);
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
     const [shortName, setShortName] = useState('');
+    const [isDrpDwnDisabled, setIsDrpDwnDisabled] = useState(false);
     // const [shortName, setShortName] = useState('');
     const requiredFields = [tarLocale, shortName];
     const [isPlaying, setIsPlaying] = useState(false);
@@ -87,8 +91,10 @@ const LanguageSelection = () => {
 
     useEffect(() => {
         if (isPlaying) {
+            setIsDrpDwnDisabled(true);
             translator = startContinuousTranslation();
         } else if (translator) {
+            setIsDrpDwnDisabled(true);
             translator.stopContinuousRecognitionAsync(() => {
                 console.log("Continuous recognition stopped");
             });

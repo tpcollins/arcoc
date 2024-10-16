@@ -9,7 +9,6 @@ const PlayButton = <T extends { [key: string]: any }>({
 }: PlaybuttonProps<T>) => {
 
   const [showAlert, setShowAlert] = useState(false);
-  const [isDisabled, setIsDisabled] = useState(false);
 
   const handleClick = () => {
     // Check if all required fields are truthy

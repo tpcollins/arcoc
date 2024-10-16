@@ -42,7 +42,8 @@ const DropdownMenu = <T extends { [key: string]: any }>({
   return (
     <>
       <Dropdown show={isOpen} onToggle={(isOpen) => setIsOpen(isOpen)}>
-        <Dropdown.Toggle id="dropdown-basic">
+        <Dropdown.Toggle 
+        id="dropdown-basic">
           {selValue || data.btnDrpDwnTxt}
         </Dropdown.Toggle>
 
@@ -59,7 +60,7 @@ const DropdownMenu = <T extends { [key: string]: any }>({
           {filteredData.map((item, idx) => (
             <Dropdown.Item
               eventKey={item as any}
-              key={idx}
+              key={idx} 
               onClick={async () => {
                 await handleSelValue(item);
                 handleTargetLangChange(item.code, item.tarCode);
