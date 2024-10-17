@@ -16,15 +16,11 @@ BUG LIST SO FAR:
 - or upon sitting on the page too long
 
 3. Need to make dropdowns unclickable when program is actively translating
-    i. Created isDrpDwnDisabled variables. Gets set to true in the useEffect that determines conditions for isPlaying. -
-    - isDrpDwnDisabled needs to be passed into the DropdownMenu comp to disable dropdown toggles when isDrpDwnDisabled is -
-    - set to true.
-    
-    3a. Create error message for clicking on drop down toggles when translating using the variables described above.
+    3a. Create error message for clicking on drop down toggles when translating using the isDrpDwnDisabled and isPlaying
     3b. Make error message go away when translator stops and when user clicks anywhere on screen after trying to -
     - change language or neural voice while translating
 
-4. If user selects new language then the voice button should refresh (not say the previously spoken voice). If we can -
+4. If user selects new language then the voice button should refresh (not say the previously chosen voice). If we can -
 - figure out #3 first then we can probably just use the same variable we use to make the button unclickable to refresh -
 - the voice locale 
 
@@ -42,16 +38,25 @@ import { RootState } from '@/store/store';
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 
 const LanguageSelection = () => {
+    // Locales
     const { locale, setLocale } = useLocale();
     const { tarLocale, setTarLocale } = useLocale();
+
+    // API Key
     const apiKey = useSelector((state: RootState) => state.apiKey.apiKey); // Using Redux to get the API key
+
+    // Voices
     const voices = useVoices(locale, apiKey);
+
+    // Dropdown Data
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
     const [shortName, setShortName] = useState('');
     const [isDrpDwnDisabled, setIsDrpDwnDisabled] = useState(false);
-    // const [shortName, setShortName] = useState('');
     const requiredFields = [tarLocale, shortName];
     const [isPlaying, setIsPlaying] = useState(false);
+    const [actTransErrorMsg, setActTransErrorMsg] = useState(false);
+
+    // Translator
     let translator: SpeechSDK.TranslationRecognizer;
     
 
@@ -64,6 +69,12 @@ const LanguageSelection = () => {
     const handleShortName = (newShortName: string) => {
         setShortName(newShortName);
         console.log()
+    };
+
+    const handleErrorClick = () => {
+        if (isPlaying) {
+            setActTransErrorMsg(true);
+        }
     };
 
     useEffect(() => {
@@ -88,6 +99,20 @@ const LanguageSelection = () => {
     useEffect(() => {
         console.log("Updated shortName:", shortName); // Correctly logs after update
     }, [shortName]);
+
+    useEffect(() => {
+        const handleErrorClick = () => {
+            setActTransErrorMsg(false);
+        };
+    
+        // Add event listener to the document
+        document.addEventListener('click', handleErrorClick);
+    
+        // Clean up the event listener on component unmount
+        return () => {
+          document.removeEventListener('click', handleErrorClick);
+        };
+    }, []);
 
     useEffect(() => {
         if (isPlaying) {
@@ -175,10 +200,18 @@ const LanguageSelection = () => {
     <>
         <div className="d-flex flex-column align-items-center mt-4">
             <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
+
+                {actTransErrorMsg && (
+                    <div className="text-center mt-2" style={{ color: 'red' }}>
+                        You cannot change your target language or neural voice while actively translating
+                    </div>
+                )}
+
                 <DropdownMenu
                     data={targetLangData}
                     handleTarLang={handleTarLang}
                     isDisabled={isDrpDwnDisabled}
+                    actTransClick={handleErrorClick}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img

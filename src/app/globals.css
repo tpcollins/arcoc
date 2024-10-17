@@ -86,6 +86,12 @@ button.btn {
   text-align: center;
 }
 
+.disabledDropdown {
+  pointer-events: none; /* Prevents interaction with the dropdown */
+  opacity: 0.5; /* Makes it look disabled */
+  cursor: not-allowed; /* Changes the cursor to indicate it's disabled */
+}
+
 /* 5. Playbutton Styles */
 .playButtonContainer {
   margin-top: 20px; /* Adjust this as necessary */

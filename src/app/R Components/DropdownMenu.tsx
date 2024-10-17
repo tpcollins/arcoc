@@ -9,7 +9,8 @@ const DropdownMenu = <T extends { [key: string]: any }>({
   renderItem,
   handleTarLang,
   handleShortName,
-  isDisabled
+  isDisabled,
+  actTransClick
 }: DropdownMenuProps<T>) => {
 
   const [filter, setFilter] = useState('');
@@ -38,14 +39,23 @@ const DropdownMenu = <T extends { [key: string]: any }>({
     setIsOpen(false);
   }
 
+  const handleActTransClick = () => {
+    if (isDisabled && actTransClick){
+      actTransClick();
+    }
+  }
+
   const filteredData = data.links.filter(item => item[data.config.renderItemText].toLowerCase().includes(filter.toLowerCase()));
 
   return (
     <>
       <Dropdown show={isOpen} onToggle={(isOpen) => setIsOpen(isOpen)}>
         <Dropdown.Toggle 
-        disabled={isDisabled ? true : false}
-        id="dropdown-basic">
+        className={isDisabled ? 'disabledDropdown' : ''}
+        id="dropdown-basic"
+        // disabled={isDisabled ? true : false}
+        onMouseDown={handleActTransClick}
+        >
           {selValue || data.btnDrpDwnTxt}
         </Dropdown.Toggle>
 
