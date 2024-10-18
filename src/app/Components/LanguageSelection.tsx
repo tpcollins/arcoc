@@ -17,13 +17,19 @@ NON-MVP TODO:
 TODO: BUG LIST
 BUG LIST SO FAR:
 
-2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
+2BL. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
 
-4. If user selects new language then the voice button should refresh (not say the previously chosen voice). If we can -
+4BL. If user selects new language then the voice button should refresh (not say the previously chosen voice). If we can -
 - figure out #3 first then we can probably just use the same variable we use to make the button unclickable to refresh -
 - the voice locale 
 
+*/
+
+/*
+
+TODO: NON BUGLIST
+1NBL. Use Speech SDK to translate neural voice array into all English. View GPT log: Translate Voice Array
 
 */
 
