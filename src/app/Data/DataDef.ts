@@ -64,6 +64,7 @@ export interface DropdownMenuProps<T> {
     handleShortName?: (newShortName: string) => void;
     isDisabled?: Boolean;
     actTransClick?: (e: any) => void;
+    requiredFields?: Array<any>;
 }
 
 export interface Voice {

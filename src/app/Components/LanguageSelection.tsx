@@ -52,9 +52,9 @@ const LanguageSelection = () => {
     const [dropdownData, setDropdownData] = useState(neuralVoiceData);
     const [shortName, setShortName] = useState('');
     const [isDrpDwnDisabled, setIsDrpDwnDisabled] = useState(false);
-    const requiredFields = [tarLocale, shortName];
+    const requiredFields = [tarLocale, shortName]; 
     const [isPlaying, setIsPlaying] = useState(false);
-    const [actTransErrorMsg, setActTransErrorMsg] = useState(false);
+    // const [actTransErrorMsg, setActTransErrorMsg] = useState(false);
 
     // Translator
     let translator: SpeechSDK.TranslationRecognizer;
@@ -69,31 +69,30 @@ const LanguageSelection = () => {
         console.log()
     };
 
-    const handleErrorClick = (e: any) => {
-        if (isPlaying && isDrpDwnDisabled) {
-            e.preventDefault();
-            setActTransErrorMsg(true);
-        }
-    };
+    // const handleErrorClick = (e: any) => {
+    //     if (isPlaying && isDrpDwnDisabled) {
+    //         e.preventDefault();
+    //         setActTransErrorMsg(true);
+    //     }
+    // };
 
     useEffect(() => {
         if (voices && voices.links) {
-            setDropdownData({
-                ...dropdownData, // Keep the existing structure of dropdownData
-                links: voices.links.map(voice => ({
-                    shortName: voice.ShortName,
-                    lang: voice.LocalName,
-                    flag: `/icons/Flags/${voice.Locale}.svg`
-                }))
-            });
+          setDropdownData({
+            ...dropdownData,
+            links: voices.links.map(voice => ({
+              shortName: voice.ShortName,
+              lang: voice.LocalName,
+              flag: `/icons/Flags/${voice.Locale}.svg`
+            }))
+          });
+      
+          // Reset the shortName only if a voice has already been selected
+          if (shortName) {
+            setShortName('');
+          }
         }
-        console.log("useEffect Locale", locale);
-        console.log("useEffect tarLocale", tarLocale);
-        // console.log("useEffect shortName", dropdownData.shor)
-        console.log("Voices", voices);
-        console.log("API Key from Redux", apiKey);
-
-    }, [voices, locale, tarLocale]);
+      }, [voices, locale, tarLocale]);
 
     useEffect(() => {
         console.log("Updated shortName:", shortName); // Correctly logs after update
@@ -211,7 +210,7 @@ const LanguageSelection = () => {
         <div className="d-flex flex-column align-items-center mt-4">
             <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
 
-                {actTransErrorMsg && (
+                {/* {actTransErrorMsg && (
                     <div 
                     className={`alertMessage ${actTransErrorMsg ? 'show' : ''}`}
                     style={{
@@ -221,7 +220,7 @@ const LanguageSelection = () => {
                     >
                         You cannot change your target language or neural voice while actively translating
                     </div>
-                )}
+                )} */}
 
                 <DropdownMenu
                     data={targetLangData}
@@ -247,6 +246,7 @@ const LanguageSelection = () => {
                     data={dropdownData} 
                     handleShortName={handleShortName}
                     isDisabled={isDrpDwnDisabled}
+                    requiredFields={requiredFields}
                     // actTransClick={handleErrorClick}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>

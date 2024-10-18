@@ -10,17 +10,15 @@ const DropdownMenu = <T extends { [key: string]: any }>({
   handleTarLang,
   handleShortName,
   isDisabled,
-  actTransClick
+  actTransClick,
+  requiredFields
 }: DropdownMenuProps<T>) => {
 
   const [filter, setFilter] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [selValue, setSelValue] = useState('');
-
-  useEffect(() => {
-    if (isOpen && inputRef.current) inputRef.current.focus();
-  },[isOpen]);
+  const [reqFields, setReqFields] = useState(true);
 
   const handleTargetLangChange = <T1, T2>(item1: T1, item2: T2) => {
     if (handleTarLang) {
@@ -45,6 +43,22 @@ const DropdownMenu = <T extends { [key: string]: any }>({
     }
   }
 
+  useEffect(() => {
+    if (isOpen && inputRef.current) inputRef.current.focus();
+  },[isOpen]);
+
+  useEffect(() => {
+    if (requiredFields){
+      const allFieldsSet = requiredFields.every(field => Boolean(field));
+  
+      if (!allFieldsSet) {
+        setReqFields(false); 
+      }else{
+        setReqFields(true);
+      }
+    }
+  }, [requiredFields]);
+
   const filteredData = data.links.filter(item => item[data.config.renderItemText].toLowerCase().includes(filter.toLowerCase()));
 
   return (
@@ -56,7 +70,8 @@ const DropdownMenu = <T extends { [key: string]: any }>({
         // disabled={isDisabled ? true : false}
         onMouseDown={handleActTransClick}
         >
-          {selValue || data.btnDrpDwnTxt}
+          {reqFields ? (selValue || data.btnDrpDwnTxt) : data.btnDrpDwnTxt}
+          {/* {selValue || data.btnDrpDwnTxt} */}
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
