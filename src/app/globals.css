@@ -81,13 +81,21 @@ body {
   text-align: center; /* Center the text */
 }
 
+.dropdownContainer {
+  margin-top: 20px; /* Adjust this as necessary */
+  display: flex;
+  justify-content: center;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: center;    /* Align content in the center */
+}
+
 button.btn {
   width: 300px;
   text-align: center;
 }
 
 .disabledDropdown {
-  pointer-events: none; /* Prevents interaction with the dropdown */
+  pointer-events: none; 
   opacity: 0.5; /* Makes it look disabled */
   cursor: not-allowed; /* Changes the cursor to indicate it's disabled */
 }

@@ -39,9 +39,9 @@ const DropdownMenu = <T extends { [key: string]: any }>({
     setIsOpen(false);
   }
 
-  const handleActTransClick = () => {
+  const handleActTransClick = (e: any) => {
     if (isDisabled && actTransClick){
-      actTransClick();
+      actTransClick(e);
     }
   }
 

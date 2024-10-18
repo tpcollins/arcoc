@@ -5,6 +5,11 @@ NON-MVP TODO:
 ^^^^^ Not going to have this in the MVP. Leaving this here so I know the chat log that it is in. Will -
 - implement in later iteration
 
+3. Need to make dropdowns unclickable when program is actively translating
+    3a. Create error message for clicking on drop down toggles when translating using the isDrpDwnDisabled and isPlaying
+    3b. Make error message go away when translator stops and when user clicks anywhere on screen after trying to -
+    - change language or neural voice while translating
+
 */
 
 
@@ -14,11 +19,6 @@ BUG LIST SO FAR:
 
 2. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
 - or upon sitting on the page too long
-
-3. Need to make dropdowns unclickable when program is actively translating
-    3a. Create error message for clicking on drop down toggles when translating using the isDrpDwnDisabled and isPlaying
-    3b. Make error message go away when translator stops and when user clicks anywhere on screen after trying to -
-    - change language or neural voice while translating
 
 4. If user selects new language then the voice button should refresh (not say the previously chosen voice). If we can -
 - figure out #3 first then we can probably just use the same variable we use to make the button unclickable to refresh -
@@ -59,8 +59,6 @@ const LanguageSelection = () => {
     // Translator
     let translator: SpeechSDK.TranslationRecognizer;
     
-
-
     const handleTarLang = (newLocale: string, newTarLocale: string) => {
         setLocale(newLocale);  // Update the locale in the context, which will trigger the useVoices hook
         setTarLocale(newTarLocale);
@@ -71,8 +69,9 @@ const LanguageSelection = () => {
         console.log()
     };
 
-    const handleErrorClick = () => {
-        if (isPlaying) {
+    const handleErrorClick = (e: any) => {
+        if (isPlaying && isDrpDwnDisabled) {
+            e.preventDefault();
             setActTransErrorMsg(true);
         }
     };
@@ -100,21 +99,32 @@ const LanguageSelection = () => {
         console.log("Updated shortName:", shortName); // Correctly logs after update
     }, [shortName]);
 
-    useEffect(() => {
-        const handleErrorClick = () => {
-            setActTransErrorMsg(false);
-        };
+    // useEffect(() => {
+    //     const handleErrorClick = (e: any) => {
+    //         e.preventDefault();
+
+    //         setTimeout(() => {
+    //             if (!e.target.closest('#dropdown-basic')) {
+    //               setActTransErrorMsg(false);  // Hide error message
+    //             }
+    //         }, 100000);  // A small delay of 100ms to avoid instant dismissal
+    //     }; 
     
-        // Add event listener to the document
-        document.addEventListener('click', handleErrorClick);
+    //     // Add event listener to the document
+    //     document.addEventListener('click', handleErrorClick);
     
-        // Clean up the event listener on component unmount
-        return () => {
-          document.removeEventListener('click', handleErrorClick);
-        };
-    }, []);
+    //     console.log("actTransErrorMessage: ", actTransErrorMsg);
+
+    //     // Clean up the event listener on component unmount
+    //     return () => {
+    //       document.removeEventListener('click', handleErrorClick);
+    //     };
+        
+    // }, []);
+      
 
     useEffect(() => {
+        console.log("isPlaying: ", isPlaying);
         if (isPlaying) {
             translator = startContinuousTranslation();
             setIsDrpDwnDisabled(true);
@@ -127,7 +137,7 @@ const LanguageSelection = () => {
         if(!isPlaying){
             setIsDrpDwnDisabled(false);
         }
-        
+        console.log("isDrpDwnDisabled: ", isDrpDwnDisabled);
 
         return () => {
             // Ensure cleanup on unmount
@@ -202,7 +212,13 @@ const LanguageSelection = () => {
             <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
 
                 {actTransErrorMsg && (
-                    <div className="text-center mt-2" style={{ color: 'red' }}>
+                    <div 
+                    className={`alertMessage ${actTransErrorMsg ? 'show' : ''}`}
+                    style={{
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                    }}  
+                    >
                         You cannot change your target language or neural voice while actively translating
                     </div>
                 )}
@@ -211,7 +227,7 @@ const LanguageSelection = () => {
                     data={targetLangData}
                     handleTarLang={handleTarLang}
                     isDisabled={isDrpDwnDisabled}
-                    actTransClick={handleErrorClick}
+                    // actTransClick={handleErrorClick}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img
@@ -231,6 +247,7 @@ const LanguageSelection = () => {
                     data={dropdownData} 
                     handleShortName={handleShortName}
                     isDisabled={isDrpDwnDisabled}
+                    // actTransClick={handleErrorClick}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img

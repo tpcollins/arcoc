@@ -63,7 +63,7 @@ export interface DropdownMenuProps<T> {
     handleTarLang?: (newLocale: string, newVoiceLocale: string) => void;
     handleShortName?: (newShortName: string) => void;
     isDisabled?: Boolean;
-    actTransClick?: () => void;
+    actTransClick?: (e: any) => void;
 }
 
 export interface Voice {
