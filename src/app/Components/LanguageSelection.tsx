@@ -14,15 +14,12 @@ NON-MVP TODO:
 
 
 /*
+
 TODO: BUG LIST
 BUG LIST SO FAR:
 
 2BL. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
-- or upon sitting on the page too long
-
-4BL. If user selects new language then the voice button should refresh (not say the previously chosen voice). If we can -
-- figure out #3 first then we can probably just use the same variable we use to make the button unclickable to refresh -
-- the voice locale 
+- or upon sitting on the page too long 
 
 */
 
