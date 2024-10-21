@@ -10,12 +10,14 @@ NON-MVP TODO:
     3b. Make error message go away when translator stops and when user clicks anywhere on screen after trying to -
     - change language or neural voice while translating
 
+4. API Key for translator (to translate the list of voices from their respective alphabets to english )
+
 */
 
 
 /*
 
-TODO: BUG LIST
+TODO: BUG LISTs
 BUG LIST SO FAR:
 
 2BL. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
@@ -34,13 +36,41 @@ import React, { useState, useEffect } from 'react';
 import DropdownMenu from '../R Components/DropdownMenu';
 import { useLocale } from '@/Contexts/LocalizationContext';
 import { useVoices } from '@/Custom Hooks/useVoices';
+import { useTranslation } from '@/Custom Hooks/useTranslation';
 import { targetLangData, neuralVoiceData, plyBtnData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
+import { parse } from 'cookie';
+import { GetServerSidePropsContext } from 'next';
 
-const LanguageSelection = () => {
+
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+    const { req } = context;
+  
+    const cookies = req.headers.cookie ? parse(req.headers.cookie) : {};
+    console.log('Parsed Cookies:', cookies); 
+
+    const apiKey = cookies.apiKey;
+  
+    if (!apiKey) {
+      return { redirect: { destination: '/page', permanent: false } };
+    }
+  
+    return {
+      props: {
+        apiKey,
+      },
+    };
+};
+
+interface LanguageSelectionProps {
+    apiKey: string;
+}
+
+// const LanguageSelection: React.FC<LanguageSelectionProps> = ({ apiKey }) => {
+const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // Locales
     const { locale, setLocale } = useLocale();
     const { tarLocale, setTarLocale } = useLocale();
@@ -81,13 +111,13 @@ const LanguageSelection = () => {
 
     useEffect(() => {
         if (voices && voices.links) {
-          setDropdownData({
-            ...dropdownData,
-            links: voices.links.map(voice => ({
-              shortName: voice.ShortName,
-              lang: voice.LocalName,
-              flag: `/icons/Flags/${voice.Locale}.svg`
-            }))
+            setDropdownData({
+                ...dropdownData,
+                links: voices.links.map(voice => ({
+                    shortName: voice.ShortName,
+                    lang: voice.LocalName,
+                    flag: `/icons/Flags/${voice.Locale}.svg`
+                }))
           });
       
           // Reset the shortName only if a voice has already been selected
@@ -95,11 +125,62 @@ const LanguageSelection = () => {
             setShortName('');
           }
         }
+
+        
       }, [voices, locale, tarLocale]);
 
     useEffect(() => {
         console.log("Updated shortName:", shortName); // Correctly logs after update
     }, [shortName]);
+
+    // Microsoft Translator
+    useEffect(() => {
+        const fetchTranslations = async () => {
+          if (voices && voices.links) {
+            const translatorApiUrl = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=en`;
+            const apiKey = process.env.NEXT_PUBLIC_TRANSLATOR_KEY;
+
+            console.log("environment key: ", process.env.NEXT_PUBLIC_TRANSLATOR_KEY);
+      
+            const translatedLinks = await Promise.all(
+              voices.links.map(async (voice) => {
+                // Perform the translation API request directly here
+                const response = await fetch(translatorApiUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Ocp-Apim-Subscription-Key': apiKey || '',
+                    'Content-Type': 'application/json',
+                    'Ocp-Apim-Subscription-Region': 'eastus2',  // Replace with your Azure region
+                  },
+                  body: JSON.stringify([{ Text: voice.LocalName }]),  // The text to translate
+                });
+      
+                const data = await response.json();
+      
+                // Log the translation response for debugging
+                console.log('Translation API response for:', voice.LocalName, data);
+      
+                const translatedLang = data[0]?.translations[0]?.text || voice.LocalName;  // Use translated language, fallback to original if translation fails
+      
+                return {
+                  shortName: voice.ShortName,
+                  lang: translatedLang,  // Use translated language
+                  flag: `/icons/Flags/${voice.Locale}.svg`,
+                };
+              })
+            );
+      
+            setDropdownData((prevData) => ({
+              ...prevData,
+              links: translatedLinks,
+            }));
+          }
+        };
+      
+        fetchTranslations();  // Invoke the async function
+      
+      }, [voices, locale, tarLocale]);  // Add dependencies
+      
 
     // useEffect(() => {
     //     const handleErrorClick = (e: any) => {
@@ -147,6 +228,10 @@ const LanguageSelection = () => {
         };
     }, [isPlaying, isDrpDwnDisabled]);
 
+    useEffect(() => {
+        console.log("api key: ", apiKey)
+    }, [apiKey]);
+
     const startContinuousTranslation = () => {   
         // Step 1: Initialize speech translation config
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
@@ -176,7 +261,7 @@ const LanguageSelection = () => {
             }
         };
 
-        // Step 5: Start continuous recognition
+        // Step 5: Start continuous recognition 
         translator.startContinuousRecognitionAsync(() => {
             console.log("Continuous recognition started");
         });
@@ -224,6 +309,9 @@ const LanguageSelection = () => {
                         You cannot change your target language or neural voice while actively translating
                     </div>
                 )} */}
+
+                {/* {apiKey && <p>Your API Key is: {apiKey}</p>} */}
+
 
                 <DropdownMenu
                     data={targetLangData}

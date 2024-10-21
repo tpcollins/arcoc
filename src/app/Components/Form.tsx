@@ -2,9 +2,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData } from '../Data/DataDef';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setApiKey } from '@/store/apiKeySlice';
-import { RootState } from '@/store/store';
 
 interface FormProps {
   data: FormData;
@@ -12,8 +11,6 @@ interface FormProps {
 
 const Form: React.FC<FormProps> = ({ data }) => {
   const dispatch = useDispatch();
-  // Properly typing the useSelector hook
-  const apiKey = useSelector((state: RootState) => state.apiKey.apiKey); 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>('');
   const router = useRouter();
@@ -45,6 +42,28 @@ const Form: React.FC<FormProps> = ({ data }) => {
       }, 100); // Adjust the timeout if needed
     }
   };
+
+  // const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  //   event.preventDefault();
+  
+  //   // Validate the API key by posting to your server
+  //   const res = await fetch('/api/validateKey', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({ apiKey: inputValue }),
+  //   });
+  
+  //   if (!res.ok) {
+  //     setErrorMessage('Invalid Key');
+  //   } else {
+  //     console.log('API key validated and stored in cookie');
+  
+  //     // Optionally: dispatch some success action or move to the next page
+  //     router.push('/verbose');
+  //   }
+  // };
 
   return (
     <form onSubmit={handleSubmit}>

@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { serialize } from 'cookie';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -20,6 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!response.ok) {
       throw new Error('Invalid API Key');
     }
+
+    res.setHeader('Set-Cookie', serialize('apiKey', apiKey, {
+      httpOnly: true,           // Make the cookie HTTP-only
+      secure: process.env.NODE_ENV === 'production',  // Use secure cookies only in production (not localhost)
+      sameSite: 'strict',        // Helps mitigate CSRF attacks
+      maxAge: 60 * 60 * 24,      // 1 day expiration
+      path: '/',                 // Make the cookie available site-wide
+    }));
+  
+    res.status(200).json({ message: 'API key is valid and stored' });
 
     const token = await response.text();
     return res.status(200).json({ token });

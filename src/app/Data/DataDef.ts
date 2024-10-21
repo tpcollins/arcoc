@@ -38,10 +38,10 @@ export interface Listgroup {
 
 // 4. Dropdown Section
 
-export interface DropdownItem {
-    // Note regarding this interface: links is now of type generic. Any data can go in dropdown item so comp is still reusable
-    lang: string;
-}
+// export interface DropdownItem {
+//     // Note regarding this interface: links is now of type generic. Any data can go in dropdown item so comp is still reusable
+//     lang: string;
+// }
 
 export interface DropdownData<T> {
     btnDrpDwnTxt: string;
