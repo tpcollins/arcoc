@@ -159,16 +159,16 @@ export const sourceLangData: DropdownData<{ lang: string; flag: string }> = {
     )}
   />;
 
-export const neuralVoiceData: DropdownData<{ lang: string; flag: string }> = {
+export const neuralVoiceData: DropdownData<{ lang: string; flag: string; gender: string; }> = {
   btnDrpDwnTxt: "Neural Voice",
   links: [
-    { lang: "AriaNeural (Cheerful Male)", flag: "/icons/Flags/en-US.svg" },
-    { lang: "GuyNeural (Professional Male)", flag: "/icons/Flags/en-US.svg" },
-    { lang: "JennyNeural (Empathetic Female)", flag: "/icons/Flags/en-US.svg" },
-    { lang: "DaliaNeural (General Female)", flag: "/icons/Flags/es-ES.svg" },
-    { lang: "JorgeNeural (Friendly Male)", flag: "/icons/Flags/es-ES.svg" },
-    { lang: "XiaoxiaoNeural (Cheerful Female)", flag: "/icons/Flags/zh-Hant.svg" },
-    { lang: "YunxiNeural (Calm Male)", flag: "/icons/Flags/zh-Hant.svg" }
+    // { lang: "AriaNeural (Cheerful Male)", flag: "/icons/Flags/en-US.svg" },
+    // { lang: "GuyNeural (Professional Male)", flag: "/icons/Flags/en-US.svg" },
+    // { lang: "JennyNeural (Empathetic Female)", flag: "/icons/Flags/en-US.svg" },
+    // { lang: "DaliaNeural (General Female)", flag: "/icons/Flags/es-ES.svg" },
+    // { lang: "JorgeNeural (Friendly Male)", flag: "/icons/Flags/es-ES.svg" },
+    // { lang: "XiaoxiaoNeural (Cheerful Female)", flag: "/icons/Flags/zh-Hant.svg" },
+    // { lang: "YunxiNeural (Calm Male)", flag: "/icons/Flags/zh-Hant.svg" }
   ],
   config: {
     displayText: 'lang',
@@ -181,7 +181,7 @@ export const neuralVoiceData: DropdownData<{ lang: string; flag: string }> = {
     renderItem={(item) => (
       <>
         <img alt="flag" src={item.flag} width="16" height="16" style={{ paddingRight: "5px" }} />
-        {item.lang}
+        {item.lang + ' (' + item.gender + ')'}
       </>
     )}
 />;

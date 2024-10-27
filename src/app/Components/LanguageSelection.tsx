@@ -25,13 +25,6 @@ BUG LIST SO FAR:
 
 */
 
-/*
-
-TODO: NON BUGLIST
-1NBL. Use Speech SDK to translate neural voice array into all English. View GPT log: Translate Voice Array
-
-*/
-
 import React, { useState, useEffect } from 'react';
 import DropdownMenu from '../R Components/DropdownMenu';
 import { useLocale } from '@/Contexts/LocalizationContext';
@@ -116,7 +109,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 links: voices.links.map(voice => ({
                     shortName: voice.ShortName,
                     lang: voice.LocalName,
-                    flag: `/icons/Flags/${voice.Locale}.svg`
+                    flag: `/icons/Flags/${voice.Locale}.svg`,
+                    gender: voice.Gender,
                 }))
           });
       
@@ -164,6 +158,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
       
                 return {
                   shortName: voice.ShortName,
+                  gender: voice.Gender,
                   lang: translatedLang,  // Use translated language
                   flag: `/icons/Flags/${voice.Locale}.svg`,
                 };
@@ -349,7 +344,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                                 style={{ paddingRight: '5px' }}
                                 width={16}
                             />
-                            {item.lang}
+                            {item.lang + ' (' + item.gender + ')'}
                         </div>
                     )}
                 />

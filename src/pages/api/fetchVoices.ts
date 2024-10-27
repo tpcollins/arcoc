@@ -15,7 +15,21 @@ export const fetchVoices = async (locale: string, apiKey: string): Promise<Dropd
     });
 
     const voices: Voice[] = await response.json();
-    const filteredVoices = voices.filter(voice => voice.Locale === locale);
+    
+    const filteredVoices = voices
+    .filter(voice => voice.Locale === locale)
+    .reduce((acc: Voice[], voice) => {
+        // Check if there's already a male and a female voice in the array
+        const hasMale = acc.some(v => v.Gender === 'Male');
+        const hasFemale = acc.some(v => v.Gender === 'Female');
+        
+        // If the voice matches the needed gender and there's not already one, add it
+        if ((voice.Gender === 'Male' && !hasMale) || (voice.Gender === 'Female' && !hasFemale)) {
+          acc.push(voice);
+        }
+        
+        return acc;
+      }, []);
 
     // Transform to DropdownData
     return {
