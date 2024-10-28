@@ -59,7 +59,6 @@ export const languageList = [
   { lang: "Croatian", code: "hr-HR", tarCode: "hr", flag: "/Icons/Flags/hr-HR.svg" },
   { lang: "Czech", code: "cs-CZ", tarCode: "cs", flag: "/Icons/Flags/cs-CZ.svg" },
   { lang: "Danish", code: "da-DK", tarCode: "da", flag: "/Icons/Flags/da-DK.svg" },
-  { lang: "Dari", code: "prs", tarCode: "prs", flag: "/Icons/Flags/prs.svg" },
   { lang: "Dutch", code: "nl-NL", tarCode: "nl", flag: "/Icons/Flags/nl-NL.svg" },
   { lang: "English", code: "en-US", tarCode: "en", flag: "/Icons/Flags/en-US.svg" },
   { lang: "Estonian", code: "et-EE", tarCode: "et", flag: "/Icons/Flags/et-EE.svg" },
