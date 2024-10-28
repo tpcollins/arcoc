@@ -187,6 +187,6 @@ export const neuralVoiceData: DropdownData<{ lang: string; flag: string; gender:
 />;
 
 // 5. Playbutton Section
-export const plyBtnData: PlaybuttonData<string> = {
+export const plyBtnData: PlaybuttonData = {
   errorMessage: "Please make sure you have selected a target language and neural voice"
 }
