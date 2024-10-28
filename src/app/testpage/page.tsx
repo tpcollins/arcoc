@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-const Verbose: React.FC = () => {
+const TestPage: React.FC = () => {
 
     return(
         <>
@@ -11,4 +11,4 @@ const Verbose: React.FC = () => {
     )
 };
 
-export default Verbose;
+export default TestPage;
