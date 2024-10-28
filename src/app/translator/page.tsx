@@ -24,11 +24,9 @@ const Verbose: React.FC = () => {
                             <LanguageSelection />
                         </LocalizationProvider>
                     </Provider>
-
                 </div>
             </div>
 
-            <h1>Test Page</h1>
         </>
     )
 };
