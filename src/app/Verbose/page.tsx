@@ -1,19 +1,19 @@
 "use client";
 
 import React from 'react';
-import ListGroup from '@/app/R Components/ListGroup';
-import LanguageSelection from '@/app/Components/LanguageSelection';
+// import ListGroup from '@/app/R Components/ListGroup';
+// import LanguageSelection from '@/app/Components/LanguageSelection';
 
-import { transPageLgData } from '@/app/Data/Data';
-import { LocalizationProvider } from '@/Contexts/LocalizationContext';
-import { Provider } from 'react-redux';
-import store from '@/store/store';
+// import { transPageLgData } from '@/app/Data/Data';
+// import { LocalizationProvider } from '@/Contexts/LocalizationContext';
+// import { Provider } from 'react-redux';
+// import store from '@/store/store';
 
 const Verbose: React.FC = () => {
 
     return(
         <>
-            <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
+            {/* <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
                 <div className="w-100 d-flex justify-content-around mb-20">
                     <ListGroup data={transPageLgData} />
                 </div>
@@ -26,7 +26,9 @@ const Verbose: React.FC = () => {
                     </Provider>
 
                 </div>
-            </div>
+            </div> */}
+
+            <h1>Test Page</h1>
         </>
     )
 };
