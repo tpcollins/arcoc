@@ -59,7 +59,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 };
 
 interface LanguageSelectionProps {
-    apiKey: string;
+    apiKey?: string;
 }
 
 // const LanguageSelection: React.FC<LanguageSelectionProps> = ({ apiKey }) => {
