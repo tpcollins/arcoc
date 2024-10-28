@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { PlaybuttonProps } from '../Data/DataDef';
 
-const PlayButton = <T extends { [key: string]: any }>({ 
+const PlayButton = ({ 
   isPlaying,
   setIsPlaying,
   requiredFields,
   data
-}: PlaybuttonProps<T>) => {
+}: PlaybuttonProps) => {
 
   const [showAlert, setShowAlert] = useState(false);
 
