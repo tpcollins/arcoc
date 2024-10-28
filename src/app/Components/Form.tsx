@@ -39,7 +39,7 @@ const Form: React.FC<FormProps> = ({ data }) => {
       setTimeout(() => {
         console.log('Navigating to verbose page...');
         router.refresh();
-        router.push('/verbose');
+        router.push('/translator');
       }, 100); // Adjust the timeout if needed
     }
   };
