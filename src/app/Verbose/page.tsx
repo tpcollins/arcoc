@@ -1,10 +1,10 @@
 "use client";
 
 import React from 'react';
-import ListGroup from '../R Components/ListGroup';
-import LanguageSelection from '../Components/LanguageSelection';
+import ListGroup from '@/app/R Components/ListGroup';
+import LanguageSelection from '@/app/Components/LanguageSelection';
 
-import { transPageLgData } from '../Data/Data';
+import { transPageLgData } from '@/app/Data/Data';
 import { LocalizationProvider } from '@/Contexts/LocalizationContext';
 import { Provider } from 'react-redux';
 import store from '@/store/store';
