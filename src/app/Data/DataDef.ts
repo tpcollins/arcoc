@@ -91,9 +91,9 @@ export interface PlaybuttonProps<T> {
     isPlaying: boolean;
     setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
     requiredFields: Array<any>;
-    data: PlaybuttonData<T>;
+    data: PlaybuttonData;
 }
 
-export interface PlaybuttonData<T> {
+export interface PlaybuttonData {
     errorMessage: string;
 }
