@@ -33,7 +33,7 @@ const Form: React.FC<FormProps> = ({ data }) => {
       // Dispatch action to Redux store
       dispatch(setApiKey(inputValue));  // Correct usage of dispatch
 
-      console.log('API Key set to:', inputValue); // Log inputValue here
+      // console.log('API Key set to:', inputValue); // Log inputValue here
       
       // Add slight delay before routing to ensure state is updated
       setTimeout(() => {

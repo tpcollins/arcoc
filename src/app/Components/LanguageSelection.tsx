@@ -223,9 +223,9 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     }, [isPlaying, isDrpDwnDisabled]);
 
-    useEffect(() => {
-        console.log("api key: ", apiKey)
-    }, [apiKey]);
+    // useEffect(() => {
+    //     console.log("api key: ", apiKey)
+    // }, [apiKey]);
 
     const startContinuousTranslation = () => {   
         // Step 1: Initialize speech translation config
