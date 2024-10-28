@@ -38,6 +38,7 @@ const Form: React.FC<FormProps> = ({ data }) => {
       // Add slight delay before routing to ensure state is updated
       setTimeout(() => {
         console.log('Navigating to verbose page...');
+        router.refresh();
         router.push('/verbose');
       }, 100); // Adjust the timeout if needed
     }
