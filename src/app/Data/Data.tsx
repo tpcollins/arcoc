@@ -28,7 +28,7 @@ export const shareKeyFormData: FormData = {
 // 2. Footer Section
 export const mainPageFooterData: FooterData = {
   links: [
-    { text: "Collins Web Design LLC 2024", url: "https://tristancollins.org", imgUrl: "/icons/copyright.svg"}
+    { text: "Collins Web Design LLC 2024", url: "https://tristancollins.org", imgUrl: "/Icons/copyright.svg"}
   ]
 };
 
@@ -118,7 +118,7 @@ export const languageList = [
 ];
 
 const sourceLangList = [
-  { lang: "English", code: "en-US", tarCode: "en", flag: "/icons/Flags/en-US.svg" }
+  { lang: "English", code: "en-US", tarCode: "en", flag: "/Icons/Flags/en-US.svg" }
 ]
 
 export const targetLangData: DropdownData<{ lang: string; flag: string }> = {

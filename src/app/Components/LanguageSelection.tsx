@@ -109,7 +109,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 links: voices.links.map(voice => ({
                     shortName: voice.ShortName,
                     lang: voice.LocalName,
-                    flag: `/icons/Flags/${voice.Locale}.svg`,
+                    flag: `/Icons/Flags/${voice.Locale}.svg`,
                     gender: voice.Gender,
                 }))
           });
@@ -160,7 +160,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                   shortName: voice.ShortName,
                   gender: voice.Gender,
                   lang: translatedLang,  // Use translated language
-                  flag: `/icons/Flags/${voice.Locale}.svg`,
+                  flag: `/Icons/Flags/${voice.Locale}.svg`,
                 };
               })
             );
