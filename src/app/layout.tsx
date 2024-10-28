@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
 import localFont from "next/font/local";
 import 'bootstrap/dist/css/bootstrap.min.css';
 // import 'bootstrap/dist/js/bootstrap.bundle.min.js'

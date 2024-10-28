@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export const useTranslation = async (text: string): Promise<string> => {
     const [translatedText, setTranslatedText] = useState(text);  // Hold the translated text

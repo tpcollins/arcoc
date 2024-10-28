@@ -6,9 +6,9 @@ const VolumeSlider: React.FC = () => {
   const [volume, setVolume] = useState(50); // Initialize volume state
 
   // Handle change in the slider
-  const handleSliderChange = (value: number) => {
-    setVolume(value);
-  };
+  // const handleSliderChange = (value: number) => {
+  //   setVolume(value);
+  // };
 
   // Handle change in the input field
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

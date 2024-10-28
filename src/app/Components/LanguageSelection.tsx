@@ -29,7 +29,7 @@ import React, { useState, useEffect } from 'react';
 import DropdownMenu from '../R Components/DropdownMenu';
 import { useLocale } from '@/Contexts/LocalizationContext';
 import { useVoices } from '@/Custom Hooks/useVoices';
-import { useTranslation } from '@/Custom Hooks/useTranslation';
+// import { useTranslation } from '@/Custom Hooks/useTranslation';
 import { targetLangData, neuralVoiceData, plyBtnData } from '../Data/Data';
 import PlayButton from '../R Components/PlayButton';
 import { useSelector } from 'react-redux';
