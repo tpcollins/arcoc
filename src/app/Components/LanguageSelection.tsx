@@ -18,7 +18,6 @@ NON-MVP TODO:
 /*
 
 TODO:
-1. When we select Spanish, the male voice doesn't work. It uses the female voice.
 2. Can we change the field labels to white? Can't see them on the black background.
 3. Is there a way to make the target language drop down not scroll the whole page? (Save this for later if it's a big deal)
 4. When there is a long pause in speaking (like when we sing) I think it's disconnecting from the Azure service. It will have to handle pauses and either reopen the connection when we start speaking again or hold it open (if it can?).
@@ -268,30 +267,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         translator.startContinuousRecognitionAsync(() => {
             console.log("Continuous recognition started");
         });
-
-        // Speech synthesis function to output the translated text as neural speech
-        // const synthesizeSpeech = (text: string) => {
-        //     // Reuse the speech config for synthesis
-        //     const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
-        //         apiKey as string, 
-        //         'eastus2' as string
-        //     );
-
-        //     // Set output audio configuration (default speakers)
-        //     const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-
-        //     // Initialize synthesizer with speech config and audio output
-        //     const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-
-        //     // Synthesize the translated text into neural speech
-        //     synthesizer.speakTextAsync(text, result => {
-        //         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-        //             console.log("Synthesis complete.");
-        //         } else {
-        //             console.error("Synthesis failed.", result.errorDetails);
-        //         }
-        //     });
-        // };
+        
         const synthesizeSpeech = (text: string) => {
             // Initialize SpeechConfig for synthesis
             const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
