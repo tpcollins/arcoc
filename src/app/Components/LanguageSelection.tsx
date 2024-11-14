@@ -23,7 +23,6 @@ TODO:
 3. Is there a way to make the target language drop down not scroll the whole page? (Save this for later if it's a big deal)
 4. When there is a long pause in speaking (like when we sing) I think it's disconnecting from the Azure service. It will have to handle pauses and either reopen the connection when we start speaking again or hold it open (if it can?).
 5. I think it's doing something weird where it is talking over itself. Because we aren't chunking the transcription, it is listening for several seconds, then will start talking, but sometimes it sounds like it's returning two translations at once. I'm trying to think about how you would test that - you'd have to maybe play something that's longer form, pause it, wait, play again, etc. while listening on headphones.
-6. When you click the stop button, the browser holds the microphone connection open. Not a huge deal, just noticed it.
 
 BUG LIST:
 1BL. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
@@ -130,57 +129,57 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
       }, [voices, locale, tarLocale]);
 
     useEffect(() => {
-        console.log("Updated shortName:", shortName); // Correctly logs after update
+        console.log("Updated shortName according to useEffect:", shortName); // Correctly logs after update
     }, [shortName]);
 
-    // Microsoft Translator
-    useEffect(() => {
-        const fetchTranslations = async () => {
-          if (voices && voices.links) {
-            const translatorApiUrl = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=en`;
-            const apiKey = process.env.NEXT_PUBLIC_TRANSLATOR_KEY;
+    // // Microsoft Translator
+    // useEffect(() => {
+    //     const fetchTranslations = async () => {
+    //       if (voices && voices.links) {
+    //         const translatorApiUrl = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=en`;
+    //         const apiKey = process.env.NEXT_PUBLIC_TRANSLATOR_KEY;
 
-            console.log("environment key: ", process.env.NEXT_PUBLIC_TRANSLATOR_KEY);
+    //         console.log("environment key: ", process.env.NEXT_PUBLIC_TRANSLATOR_KEY);
       
-            const translatedLinks = await Promise.all(
-              voices.links.map(async (voice) => {
-                // Perform the translation API request directly here
-                const response = await fetch(translatorApiUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Ocp-Apim-Subscription-Key': apiKey || '',
-                    'Content-Type': 'application/json',
-                    'Ocp-Apim-Subscription-Region': 'eastus2',  // Replace with your Azure region
-                  },
-                  body: JSON.stringify([{ Text: voice.LocalName }]),  // The text to translate
-                });
+    //         const translatedLinks = await Promise.all(
+    //           voices.links.map(async (voice) => {
+    //             // Perform the translation API request directly here
+    //             const response = await fetch(translatorApiUrl, {
+    //               method: 'POST',
+    //               headers: {
+    //                 'Ocp-Apim-Subscription-Key': apiKey || '',
+    //                 'Content-Type': 'application/json',
+    //                 'Ocp-Apim-Subscription-Region': 'eastus2',  // Replace with your Azure region
+    //               },
+    //               body: JSON.stringify([{ Text: voice.LocalName }]),  // The text to translate
+    //             });
       
-                const data = await response.json();
+    //             const data = await response.json();
       
-                // Log the translation response for debugging
-                console.log('Translation API response for:', voice.LocalName, data);
+    //             // Log the translation response for debugging
+    //             console.log('Translation API response for:', voice.LocalName, data);
       
-                const translatedLang = data[0]?.translations[0]?.text || voice.LocalName;  // Use translated language, fallback to original if translation fails
+    //             const translatedLang = data[0]?.translations[0]?.text || voice.LocalName;  // Use translated language, fallback to original if translation fails
       
-                return {
-                  shortName: voice.ShortName,
-                  gender: voice.Gender,
-                  lang: translatedLang,  // Use translated language
-                  flag: `/Icons/Flags/${voice.Locale}.svg`,
-                };
-              })
-            );
+    //             return {
+    //               shortName: voice.ShortName,
+    //               gender: voice.Gender,
+    //               lang: translatedLang,  // Use translated language
+    //               flag: `/Icons/Flags/${voice.Locale}.svg`,
+    //             };
+    //           })
+    //         );
       
-            setDropdownData((prevData) => ({
-              ...prevData,
-              links: translatedLinks,
-            }));
-          }
-        };
+    //         setDropdownData((prevData) => ({
+    //           ...prevData,
+    //           links: translatedLinks,
+    //         }));
+    //       }
+    //     };
       
-        fetchTranslations();  // Invoke the async function
+    //     fetchTranslations();  // Invoke the async function
       
-      }, [voices, locale, tarLocale]);  // Add dependencies
+    //   }, [voices, locale, tarLocale]);  // Add dependencies
       
 
     // useEffect(() => {
@@ -245,6 +244,9 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         speechConfig.addTargetLanguage(tarLocale);              // Target language
         speechConfig.voiceName = shortName;     // Neural voice
 
+        console.log("speechConfig shortName in SDK code: ", speechConfig.voiceName);
+        console.log("speechConfig: ", speechConfig);
+
         // Step 2: Configure input (microphone)
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
 
@@ -268,19 +270,42 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         });
 
         // Speech synthesis function to output the translated text as neural speech
+        // const synthesizeSpeech = (text: string) => {
+        //     // Reuse the speech config for synthesis
+        //     const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
+        //         apiKey as string, 
+        //         'eastus2' as string
+        //     );
+
+        //     // Set output audio configuration (default speakers)
+        //     const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+
+        //     // Initialize synthesizer with speech config and audio output
+        //     const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+
+        //     // Synthesize the translated text into neural speech
+        //     synthesizer.speakTextAsync(text, result => {
+        //         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+        //             console.log("Synthesis complete.");
+        //         } else {
+        //             console.error("Synthesis failed.", result.errorDetails);
+        //         }
+        //     });
+        // };
         const synthesizeSpeech = (text: string) => {
-            // Reuse the speech config for synthesis
+            // Initialize SpeechConfig for synthesis
             const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
                 apiKey as string, 
                 'eastus2' as string
             );
-
+            synthConfig.speechSynthesisVoiceName = shortName; // Set the neural voice here
+        
             // Set output audio configuration (default speakers)
             const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-
+        
             // Initialize synthesizer with speech config and audio output
             const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-
+        
             // Synthesize the translated text into neural speech
             synthesizer.speakTextAsync(text, result => {
                 if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
@@ -290,6 +315,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 }
             });
         };
+        
+        
 
         return translator;
     };
