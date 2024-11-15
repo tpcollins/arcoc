@@ -2,15 +2,8 @@
 
 NON-MVP TODO:
 1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK") 
-^^^^^ Not going to have this in the MVP. Leaving this here so I know the chat log that it is in. Will -
-- implement in later iteration
 
-3. Need to make dropdowns unclickable when program is actively translating
-    3a. Create error message for clicking on drop down toggles when translating using the isDrpDwnDisabled and isPlaying
-    3b. Make error message go away when translator stops and when user clicks anywhere on screen after trying to -
-    - change language or neural voice while translating
-
-4. API Key for translator (to translate the list of voices from their respective alphabets to english )
+2. API Key for translator (to translate the list of voices from their respective alphabets to english )
 
 */
 
@@ -18,7 +11,6 @@ NON-MVP TODO:
 /*
 
 TODO:
-2. Can we change the field labels to white? Can't see them on the black background.
 3. Is there a way to make the target language drop down not scroll the whole page? (Save this for later if it's a big deal)
 4. When there is a long pause in speaking (like when we sing) I think it's disconnecting from the Azure service. It will have to handle pauses and either reopen the connection when we start speaking again or hold it open (if it can?).
 5. I think it's doing something weird where it is talking over itself. Because we aren't chunking the transcription, it is listening for several seconds, then will start talking, but sometimes it sounds like it's returning two translations at once. I'm trying to think about how you would test that - you'd have to maybe play something that's longer form, pause it, wait, play again, etc. while listening on headphones.
@@ -230,72 +222,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // useEffect(() => {
     //     console.log("api key: ", apiKey)
     // }, [apiKey]);
-
-    // const startContinuousTranslation = () => {   
-    //     // Step 1: Initialize speech translation config
-    //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-    //         apiKey as string,      // Azure Speech API key
-    //         'eastus2' as string    // Azure Speech region
-    //     );
-
-    //     // Set up translation languages and voice
-    //     speechConfig.speechRecognitionLanguage = "en-US";  // Source language (English)
-    //     speechConfig.addTargetLanguage(tarLocale);              // Target language
-    //     speechConfig.voiceName = shortName;     // Neural voice
-
-    //     console.log("speechConfig shortName in SDK code: ", speechConfig.voiceName);
-    //     console.log("speechConfig: ", speechConfig);
-
-    //     // Step 2: Configure input (microphone)
-    //     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-
-    //     // Step 3: Initialize translation recognizer
-    //     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-
-    //     // Step 4: Handle recognition results (when translation is completed)
-    //     translator.recognized = (s, e) => {
-    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
-    //             const translatedText = e.result.translations.get(tarLocale);
-    //             console.log(`Translated Text: ${translatedText}`);
-                
-    //             // Call the speech synthesis function to convert translated text to speech
-    //             synthesizeSpeech(translatedText || "");
-    //         }
-    //     };
-
-    //     // Step 5: Start continuous recognition 
-    //     translator.startContinuousRecognitionAsync(() => {
-    //         console.log("Continuous recognition started");
-    //     });
-        
-    //     const synthesizeSpeech = (text: string) => {
-    //         // Initialize SpeechConfig for synthesis
-    //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
-    //             apiKey as string, 
-    //             'eastus2' as string
-    //         );
-    //         synthConfig.speechSynthesisVoiceName = shortName; // Set the neural voice here
-        
-    //         // Set output audio configuration (default speakers)
-    //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-        
-    //         // Initialize synthesizer with speech config and audio output
-    //         const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-        
-    //         // Synthesize the translated text into neural speech
-    //         synthesizer.speakTextAsync(text, result => {
-    //             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-    //                 console.log("Synthesis complete.");
-    //             } else {
-    //                 console.error("Synthesis failed.", result.errorDetails);
-    //             }
-    //         });
-    //     };
-        
-        
-
-    //     return translator;
-    // };
 
     const startContinuousTranslation = () => {
         // Initialize speech translation config
