@@ -231,71 +231,155 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //     console.log("api key: ", apiKey)
     // }, [apiKey]);
 
-    const startContinuousTranslation = () => {   
-        // Step 1: Initialize speech translation config
+    // const startContinuousTranslation = () => {   
+    //     // Step 1: Initialize speech translation config
+    //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
+    //         apiKey as string,      // Azure Speech API key
+    //         'eastus2' as string    // Azure Speech region
+    //     );
+
+    //     // Set up translation languages and voice
+    //     speechConfig.speechRecognitionLanguage = "en-US";  // Source language (English)
+    //     speechConfig.addTargetLanguage(tarLocale);              // Target language
+    //     speechConfig.voiceName = shortName;     // Neural voice
+
+    //     console.log("speechConfig shortName in SDK code: ", speechConfig.voiceName);
+    //     console.log("speechConfig: ", speechConfig);
+
+    //     // Step 2: Configure input (microphone)
+    //     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+
+    //     // Step 3: Initialize translation recognizer
+    //     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
+
+    //     // Step 4: Handle recognition results (when translation is completed)
+    //     translator.recognized = (s, e) => {
+    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
+    //             const translatedText = e.result.translations.get(tarLocale);
+    //             console.log(`Translated Text: ${translatedText}`);
+                
+    //             // Call the speech synthesis function to convert translated text to speech
+    //             synthesizeSpeech(translatedText || "");
+    //         }
+    //     };
+
+    //     // Step 5: Start continuous recognition 
+    //     translator.startContinuousRecognitionAsync(() => {
+    //         console.log("Continuous recognition started");
+    //     });
+        
+    //     const synthesizeSpeech = (text: string) => {
+    //         // Initialize SpeechConfig for synthesis
+    //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
+    //             apiKey as string, 
+    //             'eastus2' as string
+    //         );
+    //         synthConfig.speechSynthesisVoiceName = shortName; // Set the neural voice here
+        
+    //         // Set output audio configuration (default speakers)
+    //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+        
+    //         // Initialize synthesizer with speech config and audio output
+    //         const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+        
+    //         // Synthesize the translated text into neural speech
+    //         synthesizer.speakTextAsync(text, result => {
+    //             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+    //                 console.log("Synthesis complete.");
+    //             } else {
+    //                 console.error("Synthesis failed.", result.errorDetails);
+    //             }
+    //         });
+    //     };
+        
+        
+
+    //     return translator;
+    // };
+
+    const startContinuousTranslation = () => {
+        // Initialize speech translation config
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-            apiKey as string,      // Azure Speech API key
-            'eastus2' as string    // Azure Speech region
+            apiKey as string, 
+            'eastus2' as string
         );
-
-        // Set up translation languages and voice
-        speechConfig.speechRecognitionLanguage = "en-US";  // Source language (English)
-        speechConfig.addTargetLanguage(tarLocale);              // Target language
-        speechConfig.voiceName = shortName;     // Neural voice
-
-        console.log("speechConfig shortName in SDK code: ", speechConfig.voiceName);
-        console.log("speechConfig: ", speechConfig);
-
-        // Step 2: Configure input (microphone)
+    
+        speechConfig.speechRecognitionLanguage = "en-US";
+        speechConfig.addTargetLanguage(tarLocale);
+        speechConfig.voiceName = shortName;
+    
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-
-        // Step 3: Initialize translation recognizer
         translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-
-        // Step 4: Handle recognition results (when translation is completed)
+    
+        let isSpeaking = false;
+        let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
+    
+        // Handle interim recognition results and synthesize immediately
+        translator.recognizing = (s, e) => {
+            if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+                const interimTranslatedText = e.result.translations.get(tarLocale);
+                console.log(`Interim Translated Text: ${interimTranslatedText}`);
+                
+                if (interimTranslatedText && !isSpeaking) {
+                    isSpeaking = true;
+                    synthesizeSpeech(interimTranslatedText);
+                }
+            }
+        };
+    
+        // Handle final recognized results
         translator.recognized = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
                 const translatedText = e.result.translations.get(tarLocale);
-                console.log(`Translated Text: ${translatedText}`);
-                
-                // Call the speech synthesis function to convert translated text to speech
+                console.log(`Final Translated Text: ${translatedText}`);
                 synthesizeSpeech(translatedText || "");
             }
         };
-
-        // Step 5: Start continuous recognition 
+    
+        // Handle errors
+        translator.canceled = (s, e) => {
+            console.error(`Translation canceled: ${e.reason}, Error: ${e.errorDetails}`);
+        };
+    
+        // Start continuous recognition
         translator.startContinuousRecognitionAsync(() => {
-            console.log("Continuous recognition started");
+            console.log("Continuous recognition started.");
         });
-        
+    
         const synthesizeSpeech = (text: string) => {
-            // Initialize SpeechConfig for synthesis
+            if (currentSynthesizer) {
+                currentSynthesizer.close(); // Stop any ongoing synthesis
+                currentSynthesizer = null;
+            }
+    
             const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
                 apiKey as string, 
                 'eastus2' as string
             );
-            synthConfig.speechSynthesisVoiceName = shortName; // Set the neural voice here
-        
-            // Set output audio configuration (default speakers)
+            synthConfig.speechSynthesisVoiceName = shortName;
+    
             const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-        
-            // Initialize synthesizer with speech config and audio output
-            const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-        
-            // Synthesize the translated text into neural speech
-            synthesizer.speakTextAsync(text, result => {
-                if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                    console.log("Synthesis complete.");
-                } else {
-                    console.error("Synthesis failed.", result.errorDetails);
+            currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+    
+            currentSynthesizer.speakTextAsync(text, 
+                result => {
+                    if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                        console.log("Synthesis complete.");
+                    } else {
+                        console.error("Synthesis failed.", result.errorDetails);
+                    }
+                    isSpeaking = false; // Reset flag after speaking
+                },
+                error => {
+                    console.error("Error during speech synthesis:", error);
+                    isSpeaking = false; // Reset flag on error
                 }
-            });
+            );
         };
-        
-        
-
+    
         return translator;
     };
+    
 
     return (
     <>
