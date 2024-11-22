@@ -220,88 +220,88 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     }, [isPlaying, isDrpDwnDisabled]);
     
-    // const startContinuousTranslation = () => {
-    //     // Initialize speech translation config
-    //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-    //         apiKey as string, 
-    //         'eastus2' as string
-    //     );
+    const startContinuousTranslation = () => {
+        // Initialize speech translation config
+        const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
+            apiKey as string, 
+            'eastus2' as string
+        );
     
-    //     speechConfig.speechRecognitionLanguage = "en-US";
-    //     speechConfig.addTargetLanguage(tarLocale);
-    //     speechConfig.voiceName = shortName;
+        speechConfig.speechRecognitionLanguage = "en-US";
+        speechConfig.addTargetLanguage(tarLocale);
+        speechConfig.voiceName = shortName;
     
-    //     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    //     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
+        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+        translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
     
-    //     let isSpeaking = false;
-    //     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
+        let isSpeaking = false;
+        let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
     
-    //     // Handle interim recognition results and synthesize immediately
-    //     translator.recognizing = (s, e) => {
-    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-    //             const interimTranslatedText = e.result.translations.get(tarLocale);
-    //             console.log(`Interim Translated Text: ${interimTranslatedText}`);
+        // Handle interim recognition results and synthesize immediately
+        translator.recognizing = (s, e) => {
+            if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+                const interimTranslatedText = e.result.translations.get(tarLocale);
+                console.log(`Interim Translated Text: ${interimTranslatedText}`);
                 
-    //             if (interimTranslatedText && !isSpeaking) {
-    //                 isSpeaking = true;
-    //                 synthesizeSpeech(interimTranslatedText);
-    //             }
-    //         }
-    //     };
+                if (interimTranslatedText && !isSpeaking) {
+                    isSpeaking = true;
+                    synthesizeSpeech(interimTranslatedText);
+                }
+            }
+        };
     
-    //     // Handle final recognized results
-    //     // translator.recognized = (s, e) => {
-    //     //     if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
-    //     //         const translatedText = e.result.translations.get(tarLocale);
-    //     //         console.log(`Final Translated Text: ${translatedText}`);
-    //     //         synthesizeSpeech(translatedText || "");
-    //     //     }
-    //     // };
+        // Handle final recognized results
+        // translator.recognized = (s, e) => {
+        //     if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
+        //         const translatedText = e.result.translations.get(tarLocale);
+        //         console.log(`Final Translated Text: ${translatedText}`);
+        //         synthesizeSpeech(translatedText || "");
+        //     }
+        // };
     
-    //     // Handle errors
-    //     translator.canceled = (s, e) => {
-    //         console.error(`Translation canceled: ${e.reason}, Error: ${e.errorDetails}`);
-    //     };
+        // Handle errors
+        translator.canceled = (s, e) => {
+            console.error(`Translation canceled: ${e.reason}, Error: ${e.errorDetails}`);
+        };
     
-    //     // Start continuous recognition
-    //     translator.startContinuousRecognitionAsync(() => {
-    //         console.log("Continuous recognition started.");
-    //     });
+        // Start continuous recognition
+        translator.startContinuousRecognitionAsync(() => {
+            console.log("Continuous recognition started.");
+        });
     
-    //     const synthesizeSpeech = (text: string) => {
-    //         if (currentSynthesizer) {
-    //             currentSynthesizer.close(); // Stop any ongoing synthesis
-    //             currentSynthesizer = null;
-    //         }
+        const synthesizeSpeech = (text: string) => {
+            if (currentSynthesizer) {
+                currentSynthesizer.close(); // Stop any ongoing synthesis
+                currentSynthesizer = null;
+            }
     
-    //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
-    //             apiKey as string, 
-    //             'eastus2' as string
-    //         );
-    //         synthConfig.speechSynthesisVoiceName = shortName;
+            const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
+                apiKey as string, 
+                'eastus2' as string
+            );
+            synthConfig.speechSynthesisVoiceName = shortName;
     
-    //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-    //         currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+            const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+            currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
     
-    //         currentSynthesizer.speakTextAsync(text, 
-    //             result => {
-    //                 if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-    //                     console.log("Synthesis complete.");
-    //                 } else {
-    //                     console.error("Synthesis failed.", result.errorDetails);
-    //                 }
-    //                 isSpeaking = false; // Reset flag after speaking
-    //             },
-    //             error => {
-    //                 console.error("Error during speech synthesis:", error);
-    //                 isSpeaking = false; // Reset flag on error
-    //             }
-    //         );
-    //     };
+            currentSynthesizer.speakTextAsync(text, 
+                result => {
+                    if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                        console.log("Synthesis complete.");
+                    } else {
+                        console.error("Synthesis failed.", result.errorDetails);
+                    }
+                    isSpeaking = false; // Reset flag after speaking
+                },
+                error => {
+                    console.error("Error during speech synthesis:", error);
+                    isSpeaking = false; // Reset flag on error
+                }
+            );
+        };
     
-    //     return translator;
-    // };
+        return {translator};
+    };
 
 
     // *** recognized with restart mechanism
@@ -309,7 +309,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //     // Initialize speech translation config
     //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
     //         apiKey as string,
-    //         'eastus2' as string
+    //         'eastus2' as string 
     //     );
     
     //     speechConfig.speechRecognitionLanguage = "en-US";
@@ -406,97 +406,90 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //     return {translator, stopTranslation};
     // };
 
-    const startContinuousTranslation = () => {
-        // Initialize speech translation config
-        const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-            apiKey as string,
-            'eastus2' as string
-        );
+    // const startContinuousTranslation = () => {
+    //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(apiKey, 'eastus2');
+    //     speechConfig.speechRecognitionLanguage = "en-US";
+    //     speechConfig.addTargetLanguage(tarLocale);
+    //     speechConfig.voiceName = shortName;
     
-        speechConfig.speechRecognitionLanguage = "en-US";
-        speechConfig.addTargetLanguage(tarLocale);
-        speechConfig.voiceName = shortName;
+    //     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    //     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
     
-        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-        const translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
+    //     const synthesisQueue: string[] = []; // Queue for recognized logs
+    //     let isProcessing = false; // Tracks whether a log is being processed
+    //     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
     
-        let speechBuffer = ""; // Buffer to store translations
-        let lastRecognizedText = ""; // Track last processed text
-        let isSpeaking = false; // Flag to control synthesis
-        let synthesisInterval: NodeJS.Timeout | null = null;
+    //     // Process the next log in the queue
+    //     const processNextLog = () => {
+    //         if (isProcessing || synthesisQueue.length === 0) return;
     
-        // Handle interim translations (continuous updates)
-        translator.recognizing = (s, e) => {
-            if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-                const interimText = e.result.translations.get(tarLocale);
-                // console.log(`Interim Translated Text: ${interimText}`);
-                console.log("Current Buffer:", speechBuffer);
+    //         const nextText = synthesisQueue.shift(); // Get the next log
+    //         if (!nextText) return;
     
-                // Append the entire interim text if it differs from the last recognized text
-                if (interimText && interimText !== lastRecognizedText) {
-                    speechBuffer = interimText; // Replace buffer with the most up-to-date translation
-                    lastRecognizedText = interimText; // Update the last processed text
-                }
-            }
-        };
+    //         isProcessing = true; // Mark as processing
+    //         synthesizeSpeech(nextText);
+    //     };
     
-        // Handle errors
-        translator.canceled = (s, e) => {
-            console.error(`Translation canceled: ${e.reason}, Error: ${e.errorDetails}`);
-        };
+    //     // Handle recognized speech (finalized phrases)
+    //     translator.recognized = (s, e) => {
+    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
+    //             const recognizedText = e.result.translations.get(tarLocale);
+    //             console.log(`Recognized Text: ${recognizedText}`);
     
-        // Function to synthesize buffered text periodically
-        const synthesizeSpeech = () => {
-            if (speechBuffer && !isSpeaking) {
-                isSpeaking = true;
+    //             if (recognizedText) {
+    //                 synthesisQueue.push(recognizedText); // Add to the queue
+    //                 processNextLog(); // Attempt to process the queue
+    //             }
+    //         }
+    //     };
     
-                const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
-                    apiKey as string,
-                    'eastus2' as string
-                );
-                synthConfig.speechSynthesisVoiceName = shortName;
+    //     // Start continuous recognition
+    //     translator.startContinuousRecognitionAsync(() => {
+    //         console.log("Continuous recognition started.");
+    //     });
     
-                const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-                const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+    //     // Stop continuous recognition
+    //     const stopRecognition = () => {
+    //         translator.stopContinuousRecognitionAsync(() => {
+    //             console.log("Continuous recognition stopped.");
+    //         });
+    //     };
     
-                synthesizer.speakTextAsync(
-                    speechBuffer,
-                    result => {
-                        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                            console.log("Synthesis complete.");
-                        } else {
-                            console.error("Synthesis failed:", result.errorDetails);
-                        }
-                        isSpeaking = false; // Reset flag after synthesis
-                    },
-                    error => {
-                        console.error("Error during speech synthesis:", error);
-                        isSpeaking = false; // Reset flag on error
-                    }
-                );
-            }
-        };
+    //     // Speech synthesis function
+    //     const synthesizeSpeech = (text: string) => {
+    //         if (currentSynthesizer) {
+    //             currentSynthesizer.close();
+    //             currentSynthesizer = null;
+    //         }
     
-        // Start continuous recognition
-        translator.startContinuousRecognitionAsync(() => {
-            console.log("Continuous recognition started.");
+    //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey, 'eastus2');
+    //         synthConfig.speechSynthesisVoiceName = shortName;
     
-            // Start interval to synthesize speech every 5 seconds
-            synthesisInterval = setInterval(synthesizeSpeech, 5000);
-        });
+    //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+    //         currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
     
-        // Function to stop translation
-        const stopTranslation = () => {
-            if (synthesisInterval) {
-                clearInterval(synthesisInterval); // Clear the interval
-            }
-            translator.stopContinuousRecognitionAsync(() => {
-                console.log("Continuous recognition stopped.");
-            });
-        };
-
-        return { translator, stopTranslation };
-    };    
+    //         currentSynthesizer.speakTextAsync(
+    //             text,
+    //             result => {
+    //                 if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+    //                     console.log("Synthesis complete.");
+    //                 } else {
+    //                     console.error("Synthesis failed.", result.errorDetails);
+    //                 }
+    //                 isProcessing = false; // Mark as not processing
+    //                 processNextLog(); // Process the next log
+    //             },
+    //             error => {
+    //                 console.error("Error during speech synthesis:", error);
+    //                 isProcessing = false; // Mark as not processing on error
+    //                 processNextLog(); // Process the next log
+    //             }
+    //         );
+    //     };
+    //     return {translator};
+    // };
+    
+      
     
     return (
     <>
