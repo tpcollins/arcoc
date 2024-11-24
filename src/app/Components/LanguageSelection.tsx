@@ -251,6 +251,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         const wordsToSpeak = newWords.slice(indexTracker).join(" ");
                         synthesisQueue.push(wordsToSpeak); // Push only the new words
                         indexTracker = newWords.length; // Update tracker
+
+                        console.log("Index tracker: ", indexTracker);
                     }
     
                     // Process synthesis queue
