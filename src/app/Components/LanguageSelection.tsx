@@ -1,5 +1,13 @@
 /*
 
+**** WHERE WE ARE AT:
+It is chunking almost properly. The words are coming in and not speaking twice. It still overlaps a tiny bit but I think we can do a few things:
+1. View most recent response in GPT log: "Continuous Translation Synthesis Fix" to get words to chunk in increments of 5. This will mean that each -
+- section in the array is a an increment of 5 words and it will read each increment before moving on to the next one instead of 1 by 1. I am -
+- worried that it might just do the thing with each increment where it starts over from the beginning for each word so we might have to add even more -
+- nested chunking but we will get to that when we get to that
+2. Fix API key things
+
 NON-MVP TODO:
 1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK") 
 
