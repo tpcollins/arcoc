@@ -323,7 +323,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             // indexTracker = 0;
         };
     
-        const synthesizeSpeech = (text: string) => {
+        const synthesizeSpeech = async (text: string) => {
             if (currentSynthesizer) {
                 currentSynthesizer.close();
                 currentSynthesizer = null;
@@ -338,24 +338,72 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
             currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
     
-            isSpeaking = true; // Set speaking state
-            currentSynthesizer.speakTextAsync(
-                text,
-                (result) => {
-                    if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                        console.log(`Synthesis complete: ${text}`);
-                    } else {
-                        console.error("Synthesis failed:", result.errorDetails);
-                    }
-                    isSpeaking = false; // Reset state after speaking
-                    setTimeout(processSynthesisQueue, 50); // Process next item
-                },
-                (error) => {
-                    console.error("Error during speech synthesis:", error);
-                    isSpeaking = false; // Reset state on error
-                    setTimeout(processSynthesisQueue, 50); // Retry processing
+            // isSpeaking = true; // Set speaking state
+            // currentSynthesizer.speakTextAsync(
+            //     text,
+            //     (result) => {
+            //         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            //             console.log(`Synthesis complete: ${text}`);
+            //         } else {
+            //             console.error("Synthesis failed:", result.errorDetails);
+            //         }
+            //         isSpeaking = false; // Reset state after speaking
+            //         setTimeout(processSynthesisQueue, 50); // Process next item
+            //     },
+            //     (error) => {
+            //         console.error("Error during speech synthesis:", error);
+            //         isSpeaking = false; // Reset state on error
+            //         setTimeout(processSynthesisQueue, 50); // Retry processing
+            //     }
+            // );
+            isSpeaking = true;
+
+            try {
+                // Ensure currentSynthesizer is initialized before using it
+                if (!currentSynthesizer) {
+                    const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(
+                        apiKey as string,
+                        "eastus2"
+                    );
+                    synthConfig.speechSynthesisVoiceName = shortName;
+
+                    const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+                    currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
                 }
-            );
+
+                await new Promise<void>((resolve, reject) => {
+                    if (currentSynthesizer)
+                    currentSynthesizer?.speakTextAsync(
+                        text,
+                        (result) => {
+                            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                                console.log(`Synthesis complete: ${text}`);
+                                resolve();
+                            } else {
+                                console.error("Synthesis failed:", result.errorDetails);
+                                reject(new Error(result.errorDetails));
+                            }
+                        },
+                        (error) => {
+                            console.error("Error during speech synthesis:", error);
+                            reject(error);
+                        }
+                    );
+                });
+            } catch (error) {
+                console.error("Error during synthesis:", error);
+            } finally {
+                isSpeaking = false;
+
+                // Close the synthesizer after use to free resources
+                if (currentSynthesizer) {
+                    currentSynthesizer.close();
+                    currentSynthesizer = null;
+                }
+
+                // Process the next item in the synthesis queue
+                setTimeout(processSynthesisQueue, 50);
+            }
         };
     
         // Handle cancellation or errors
