@@ -8,10 +8,21 @@ It is chunking almost properly. The words are coming in and not speaking twice. 
 - nested chunking but we will get to that when we get to that
 2. Fix API key things
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 NON-MVP TODO:
 1. Setup application to work with various microphone inputs (see GPT Log "TypeScript Azure Speech SDK") 
 
 2. API Key for translator (to translate the list of voices from their respective alphabets to english )
+
+3. Is there a way to make the target language drop down not scroll the whole page? (Save this for later if it's a big deal)
+
+BUG LIST:
+1BL. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
+- or upon sitting on the page too long 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 */
 
@@ -19,13 +30,9 @@ NON-MVP TODO:
 /*
 
 TODO:
-3. Is there a way to make the target language drop down not scroll the whole page? (Save this for later if it's a big deal)
-4. When there is a long pause in speaking (like when we sing) I think it's disconnecting from the Azure service. It will have to handle pauses and either reopen the connection when we start speaking again or hold it open (if it can?).
-5. I think it's doing something weird where it is talking over itself. Because we aren't chunking the transcription, it is listening for several seconds, then will start talking, but sometimes it sounds like it's returning two translations at once. I'm trying to think about how you would test that - you'd have to maybe play something that's longer form, pause it, wait, play again, etc. while listening on headphones.
 
-BUG LIST:
-1BL. If page refreshes, API key does not refresh with it. Need to prompt user to go back and enter API key upon refresh -
-- or upon sitting on the page too long 
+4. When there is a long pause in speaking (like when we sing) I think it's disconnecting from the Azure service. It will have to handle pauses and either reopen the connection when we start speaking again or hold it open (if it can?).
+
 
 */
 
