@@ -55,6 +55,7 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 // API Key Cookie Storage (not working yet)
 import { parse } from 'cookie';
 import { GetServerSidePropsContext } from 'next';
+import VolumeSlider from '../R Components/VolumeSlider';
 
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
@@ -255,30 +256,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let isSpeaking = false; // Prevents overlapping synthesis
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
     
-        // Handle interim recognition results
-        // translator.recognizing = (s, e) => {
-        //     if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-        //         const interimTranslatedText = e.result.translations.get(tarLocale);
-    
-        //         if (interimTranslatedText) {
-        //             console.log(`Interim Translated Text: ${interimTranslatedText}`);
-        //             const newWords = interimTranslatedText.split(" ");
-
-        //             console.log("new words length: ", newWords.length);
-        //             console.log("index tracker: ", indexTracker);
-        //             if (newWords.length > indexTracker) {
-        //                 const wordsToSpeak = newWords.slice(indexTracker).join(" ");
-        //                 synthesisQueue.push(wordsToSpeak);
-        //                 indexTracker = newWords.length; // Update tracker
-        //                 console.log(`Index tracker updated to: ${indexTracker}`);
-        //             }
-    
-        //             // Process synthesis queue
-        //             processSynthesisQueue();
-        //         }
-        //     }
-        // };
-    
         translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
@@ -337,25 +314,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     
             const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
             currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-    
-            // isSpeaking = true; // Set speaking state
-            // currentSynthesizer.speakTextAsync(
-            //     text,
-            //     (result) => {
-            //         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-            //             console.log(`Synthesis complete: ${text}`);
-            //         } else {
-            //             console.error("Synthesis failed:", result.errorDetails);
-            //         }
-            //         isSpeaking = false; // Reset state after speaking
-            //         setTimeout(processSynthesisQueue, 50); // Process next item
-            //     },
-            //     (error) => {
-            //         console.error("Error during speech synthesis:", error);
-            //         isSpeaking = false; // Reset state on error
-            //         setTimeout(processSynthesisQueue, 50); // Retry processing
-            //     }
-            // );
             isSpeaking = true;
 
             try {
@@ -402,7 +360,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 }
 
                 // Process the next item in the synthesis queue
-                setTimeout(processSynthesisQueue, 50);
+                setTimeout(processSynthesisQueue, 10000);
             }
         };
     
@@ -532,15 +490,14 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // };
 
     return (
-    <>
+        <>
         <div className="d-flex flex-column align-items-center mt-4">
+            {/* Dropdowns */}
             <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
-
                 <DropdownMenu
                     data={targetLangData}
                     handleTarLang={handleTarLang}
                     isDisabled={isDrpDwnDisabled}
-                    // actTransClick={handleErrorClick}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img
@@ -552,16 +509,15 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                                 width={16}
                             />
                             {item.lang}
-                        </div>  
+                        </div>
                     )}
                 />
-
+    
                 <DropdownMenu
-                    data={dropdownData} 
+                    data={dropdownData}
                     handleShortName={handleShortName}
                     isDisabled={isDrpDwnDisabled}
                     requiredFields={requiredFields}
-                    // actTransClick={handleErrorClick}
                     renderItem={(item) => (
                         <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
                             <img
@@ -577,18 +533,23 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     )}
                 />
             </div>
-
+    
+            {/* Move VolumeSlider Below */}
+            <div style={{ width: '700px', marginBottom: '20px' }}>
+                <VolumeSlider />
+            </div>
+    
+            {/* Play Button */}
             <div>
                 <PlayButton
-                isPlaying={isPlaying}
-                setIsPlaying={setIsPlaying}
-                requiredFields={requiredFields}
-                data={plyBtnData}
+                    isPlaying={isPlaying}
+                    setIsPlaying={setIsPlaying}
+                    requiredFields={requiredFields}
+                    data={plyBtnData}
                 />
             </div>
-            
         </div>
-    </>
+    </>    
   );
 };
 

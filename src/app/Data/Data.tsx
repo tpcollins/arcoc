@@ -36,7 +36,7 @@ export const mainPageFooterData: FooterData = {
 export const transPageLgData: Listgroup = {
   links: [
     {linkHeader: "Translator"},
-    {linkHeader: "Settings"},
+    // {linkHeader: "Settings"},
   ]
 }
  
