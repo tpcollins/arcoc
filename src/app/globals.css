@@ -6,6 +6,7 @@
   2. Form Styles
   3. List Group Styles
   4. Dropdown Button Styles
+  5. Slider Styles
 */
 
 /* 1. Global Styles */
@@ -117,4 +118,55 @@ button.btn {
 
 .alertMessage.show {
   visibility: visible; /* Only show when the alert is triggered */
+}
+
+/* 5. Slider Styles */
+.rc-slider {
+  height: 6px;
+  background: #333;
+  border-radius: 5px;
+}
+
+.rc-slider-track {
+  background: #4caf50; /* Green track for progress */
+  height: 6px;
+}
+
+.rc-slider-handle {
+  width: 16px;
+  height: 16px;
+  background: #4caf50; /* Green handle */
+  border: 2px solid #fff;
+  border-radius: 50%;
+  margin-top: -6px; /* Center the handle vertically */
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.rc-slider-handle:hover {
+  transform: scale(1.2); /* Enlarge the handle slightly on hover */
+  border-color: #76ff03; /* Bright green border */
+}
+
+.rc-slider-handle:active {
+  transform: scale(1.4); /* Enlarge the handle more when active */
+  border-color: #76ff03;
+}
+
+.rc-slider-rail {
+  background: #666; /* Grey background for unfilled track */
+  height: 6px;
+}
+
+.rc-slider-dot {
+  background: #666;
+  border: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.rc-slider-dot-active {
+  background: #4caf50;
 }
