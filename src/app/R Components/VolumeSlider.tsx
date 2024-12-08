@@ -17,7 +17,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ onVolumeChange }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
-    if (newValue >= 0 && newValue <= 200) {
+    if (newValue >= 0 && newValue <= 300) {
       setVolume(newValue);
       onVolumeChange(newValue); // Call the parent's callback
     }
@@ -29,7 +29,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ onVolumeChange }) => {
         value={volume}
         onChange={handleSliderChange}
         min={0}
-        max={200}
+        max={500}
         // marks={{
         //   0: '0',
         //   50: '|',
@@ -45,7 +45,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ onVolumeChange }) => {
         value={volume}
         onChange={handleInputChange}
         min="0"
-        max="200"
+        max="500"
         style={{
           width: '60px',
           border: '1px solid #4caf50',

@@ -115,7 +115,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     };
 
     const handleTimeoutChange = (newTimeout: number) => {
-        let multTimeout = newTimeout * 100;
+        let multTimeout = newTimeout * 200;
         setProcessTimeOut(multTimeout); // Update the parent's state
         console.log(`Volume updated in parent: ${processTimeout}`);
     };
