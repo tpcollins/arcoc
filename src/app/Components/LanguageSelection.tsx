@@ -265,7 +265,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
         let synthesisBuffer = ""; // Buffer for chunking words
         let bufferWordCount = 0; // Count of words in the buffer
-        const bufferThreshold = 10; // Chunk size (number of words)
+        const bufferThreshold = 6; // Chunk size (number of words)
         const initialBufferTime = 2000; // 2 seconds initial buffer delay
         let initialCache: string[] = []; // Cache for initial buffering
         let isInitialBuffering = true; // Tracks whether the initial buffer is active
@@ -397,7 +397,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 }
     
                 // Process the next item in the synthesis queue
-                setTimeout(processSynthesisQueue, 150);
+                setTimeout(processSynthesisQueue, processTimeout);
             }
         };
     
