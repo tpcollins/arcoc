@@ -280,66 +280,111 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             initialCache = []; // Clear the cache
             processSynthesisQueue(); // Start processing
         }, initialBufferTime);
-    
-        // Handle interim recognition results
+        
         translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
-    
+        
                 if (interimTranslatedText) {
                     console.log(`Interim Translated Text: ${interimTranslatedText}`);
                     const newWords = interimTranslatedText.split(" ");
-    
+        
                     console.log("New Words Array:", newWords, "Index Tracker:", indexTracker);
-    
-                    // Reset indexTracker if newWords length is less than indexTracker
+        
+                    // Handle reset gracefully (if newWords length is less than indexTracker)
                     if (newWords.length < indexTracker) {
-                        // *** This code block was causing the weird sequence of words at the end.
-                        // console.log("Resetting indexTracker and buffer due to newWords length reset.");
-                        // indexTracker = 0; // Reset tracker to start fresh
-                        // synthesisBuffer = ""; // Reset buffer
-                        // bufferWordCount = 0; // Reset buffer count
-
-                        // This one might have fixed it? Leaving both in for now
                         console.log("Detected reset in newWords. Adjusting indexTracker.");
-                        // Do not reset everything; adjust indexTracker to align with the newWords array.
-                        indexTracker = Math.min(indexTracker, newWords.length); // Align tracker to the newWords length
+                        indexTracker = 0; // Reset the tracker
                     }
-    
-                    // Add only new words to the buffer
+        
+                    // Append words from the last processed point
                     if (newWords.length > indexTracker) {
-                        const wordsToSpeak = newWords.slice(indexTracker).join(" ");
-                        synthesisBuffer += (synthesisBuffer ? " " : "") + wordsToSpeak; // Append to buffer
-                        bufferWordCount += newWords.length - indexTracker; // Update buffer word count
-                        indexTracker = newWords.length; // Update the tracker
+                        const wordsToAdd = newWords.slice(indexTracker).join(" ");
+                        synthesisBuffer += (synthesisBuffer ? " " : "") + wordsToAdd; // Append new content to the buffer
+                        bufferWordCount += newWords.length - indexTracker; // Update the buffer count
+                        indexTracker = newWords.length; // Advance the tracker
                         console.log(`Buffer updated: "${synthesisBuffer}"`);
-    
-                        // If still in initial buffering, cache the chunk
-                        if (isInitialBuffering) {
-                            initialCache.push(synthesisBuffer); // Add to initial cache
-                            console.log(`Cached for initial buffering: "${synthesisBuffer}"`);
-                            synthesisBuffer = ""; // Reset buffer
-                            bufferWordCount = 0; // Reset word count
-                        } else {
-                            // Process the buffer if it reaches the threshold
-                            if (bufferWordCount >= bufferThreshold) {
-                                synthesisQueue.push(synthesisBuffer); // Push the buffer to the queue
-                                console.log(`Added chunk to queue: "${synthesisBuffer}"`);
-                                synthesisBuffer = ""; // Reset buffer
-                                bufferWordCount = 0; // Reset word count
-                                processSynthesisQueue();
-                            }
-    
-                            // Set a timeout to flush the buffer if a pause is detected
-                            if (pauseTimeout) clearTimeout(pauseTimeout);
-                            pauseTimeout = setTimeout(() => {
-                                flushBuffer(); // Flush buffer on pause
-                            }, 1000); // 1 second pause detection
-                        }
+                    } else {
+                        console.log("No new words detected; maintaining current buffer.");
                     }
+        
+                    // If the buffer reaches the threshold, flush to the synthesis queue
+                    if (bufferWordCount >= bufferThreshold) {
+                        synthesisQueue.push(synthesisBuffer); // Push the buffer to the queue
+                        console.log(`Added chunk to queue: "${synthesisBuffer}"`);
+                        synthesisBuffer = ""; // Reset the buffer
+                        bufferWordCount = 0; // Reset word count
+                        processSynthesisQueue();
+                    }
+        
+                    // Detect pauses to flush the buffer
+                    if (pauseTimeout) clearTimeout(pauseTimeout);
+                    pauseTimeout = setTimeout(() => {
+                        flushBuffer(); // Flush buffer on pause
+                    }, 1000); // 1 second pause detection
                 }
             }
         };
+        
+        // Handle interim recognition results
+        // translator.recognizing = (s, e) => {
+        //     if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+        //         const interimTranslatedText = e.result.translations.get(tarLocale);
+    
+        //         if (interimTranslatedText) {
+        //             console.log(`Interim Translated Text: ${interimTranslatedText}`);
+        //             const newWords = interimTranslatedText.split(" ");
+    
+        //             console.log("New Words Array:", newWords, "Index Tracker:", indexTracker);
+    
+        //             // Reset indexTracker if newWords length is less than indexTracker
+        //             if (newWords.length < indexTracker) {
+        //                 // *** This code block was causing the weird sequence of words at the end.
+        //                 // console.log("Resetting indexTracker and buffer due to newWords length reset.");
+        //                 // indexTracker = 0; // Reset tracker to start fresh
+        //                 // synthesisBuffer = ""; // Reset buffer
+        //                 // bufferWordCount = 0; // Reset buffer count
+
+        //                 // This one might have fixed it? Leaving both in for now
+        //                 console.log("Detected reset in newWords. Adjusting indexTracker.");
+        //                 // Do not reset everything; adjust indexTracker to align with the newWords array.
+        //                 indexTracker = Math.min(indexTracker, newWords.length); // Align tracker to the newWords length
+        //             }
+    
+        //             // Add only new words to the buffer
+        //             if (newWords.length > indexTracker) {
+        //                 const wordsToSpeak = newWords.slice(indexTracker).join(" ");
+        //                 synthesisBuffer += (synthesisBuffer ? " " : "") + wordsToSpeak; // Append to buffer
+        //                 bufferWordCount += newWords.length - indexTracker; // Update buffer word count
+        //                 indexTracker = newWords.length; // Update the tracker
+        //                 console.log(`Buffer updated: "${synthesisBuffer}"`);
+    
+        //                 // If still in initial buffering, cache the chunk
+        //                 if (isInitialBuffering) {
+        //                     initialCache.push(synthesisBuffer); // Add to initial cache
+        //                     console.log(`Cached for initial buffering: "${synthesisBuffer}"`);
+        //                     synthesisBuffer = ""; // Reset buffer
+        //                     bufferWordCount = 0; // Reset word count
+        //                 } else {
+        //                     // Process the buffer if it reaches the threshold
+        //                     if (bufferWordCount >= bufferThreshold) {
+        //                         synthesisQueue.push(synthesisBuffer); // Push the buffer to the queue
+        //                         console.log(`Added chunk to queue: "${synthesisBuffer}"`);
+        //                         synthesisBuffer = ""; // Reset buffer
+        //                         bufferWordCount = 0; // Reset word count
+        //                         processSynthesisQueue();
+        //                     }
+    
+        //                     // Set a timeout to flush the buffer if a pause is detected
+        //                     if (pauseTimeout) clearTimeout(pauseTimeout);
+        //                     pauseTimeout = setTimeout(() => {
+        //                         flushBuffer(); // Flush buffer on pause
+        //                     }, 1000); // 1 second pause detection
+        //                 }
+        //             }
+        //         }
+        //     }
+        // };
     
         // Process the synthesis queue
         const processSynthesisQueue = () => {
