@@ -51,7 +51,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ onVolumeChange }) => {
           border: '1px solid #4caf50',
           borderRadius: '5px',
           padding: '5px',
-          color: '#4caf50',
+          color: 'black',
           background: '#fff',
         }}
       />

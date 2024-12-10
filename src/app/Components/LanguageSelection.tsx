@@ -5,9 +5,11 @@ Almost chunking properly. Chunks of 10 words actually works suprisingly well.
 
 Added buffer at the beginning to allow languages such as spanish to properly formulate their sentences
 
-Still having weird issue where last word will be said 1-3 words before
+Pretty sure issue with last few words/first few words of sentence not being spoken after initial big chunk is fixed (it seems to be in English)
 
-Slight overlap still on spanish with fast reading. Might need to set time out range higher???
+Slight overlap still on other languages (tested mostly Spanish and German that seems to be an issue with live translation language barriers. -
+- Working on a fix but not 100% sure what to do. Probably will need to add slight buffer in between chunks or maybe even words to let sentences -
+- properly formulate so they aren't trying to correct themselves so many times)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 NON-MVP TODO:
@@ -101,6 +103,11 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
     // Timeout
     const [processTimeout, setProcessTimeOut] = useState(100);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => setIsModalOpen(false);
     // Translator
     let translator: SpeechSDK.TranslationRecognizer | null = null;
     
@@ -518,7 +525,95 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             </div>
     
             {/* Move VolumeSlider Below */}
-            <div style={{ width: '700px', marginBottom: '20px' }}>
+            <div style={{ width: '700px', marginBottom: '20px', marginTop: '20px' }}>
+                <h3 className="text-center">
+                    Sentence Buffer
+                    <span
+                        style={{
+                            marginLeft: '8px',
+                            cursor: 'pointer',
+                            color: '#ffffff', // Lighter color for better contrast
+                            fontWeight: 'bold', // Make it bold for better visibility
+                            fontSize: '16px', // Slightly larger font size
+                            textDecoration: 'none', // Remove underline for cleaner look
+                            backgroundColor: '#007bff', // Add a background for visibility
+                            padding: '2px 6px', // Add padding for a button-like effect
+                            borderRadius: '50%', // Make it circular
+                        }}
+                        onClick={openModal}
+                        onMouseEnter={(e) => (e.target.style.backgroundColor = '#0056b3')} // Hover effect: darker background
+                        onMouseLeave={(e) => (e.target.style.backgroundColor = '#007bff')}
+                        >
+                        ?
+                    </span>
+
+                </h3>
+
+                {/* Modal */}
+                {isModalOpen && (
+                    <>
+                    {/* Overlay */}
+                    <div
+                        style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 999,
+                        }}
+                        onClick={closeModal}
+                    />
+                    {/* Modal Content */}
+                    <div
+                    style={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        zIndex: 1000,
+                    }}
+                    onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside the modal
+                    >
+                        <p
+                        style={{
+                            color: 'black',
+                        }}
+                        >
+                        The Sentence Buffer allows you to adjust how much time is taken in between sentences.
+                        </p>
+
+                        <p
+                        style={{
+                            color: 'black',
+                            paddingTop: '10px',
+                        }}
+                        >
+                        This is mainly for faster speaking languages such as Spanish, to reduce overlap.
+                        </p>
+                        <div
+                        className="text-center"
+                        style={{
+                            paddingTop: '10px',
+                        }}
+                        >
+                        <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={closeModal}
+                            style={{ marginTop: '10px' }}
+                        >
+                            Close
+                        </button>
+                        </div>
+                    </div>
+                    </>
+                )}
                 <VolumeSlider onVolumeChange={handleTimeoutChange}/>
             </div>
     
