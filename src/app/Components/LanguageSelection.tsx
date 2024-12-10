@@ -1,8 +1,6 @@
 /*
 
 **** WHERE WE ARE AT:
-Almost chunking properly. Chunks of 10 words actually works suprisingly well. 
-
 Added buffer at the beginning to allow languages such as spanish to properly formulate their sentences
 
 Pretty sure issue with last few words/first few words of sentence not being spoken after initial big chunk is fixed (it seems to be in English)
