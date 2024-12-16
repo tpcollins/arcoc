@@ -7,7 +7,7 @@
     - Make sure the words at the end are not doing that annoying thing
 2. If 1 is working, test Spanish and German and fix the overlap
     NOTE: over lap is coming from sentences correcting themselves due to language barrier. For languages that are not English, might need to add -
-    - more buffers between chunks or maybe even words? Not sure quite yet
+    - more buffers between chunks or maybe even words? Not sure quite yet.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 NON-MVP TODO:
