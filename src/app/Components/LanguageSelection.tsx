@@ -1,13 +1,13 @@
 /*
 
 **** WHERE WE ARE AT:
-Added buffer at the beginning to allow languages such as spanish to properly formulate their sentences
-
-Pretty sure issue with last few words/first few words of sentence not being spoken after initial big chunk is fixed (it seems to be in English)
-
-Slight overlap still on other languages (tested mostly Spanish and German that seems to be an issue with live translation language barriers. -
-- Working on a fix but not 100% sure what to do. Probably will need to add slight buffer in between chunks or maybe even words to let sentences -
-- properly formulate so they aren't trying to correct themselves so many times)
+12-16 TODO:
+1. Test English with large paragraph
+    - Make sure there is no overlap
+    - Make sure the words at the end are not doing that annoying thing
+2. If 1 is working, test Spanish and German and fix the overlap
+    NOTE: over lap is coming from sentences correcting themselves due to language barrier. For languages that are not English, might need to add -
+    - more buffers between chunks or maybe even words? Not sure quite yet
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 NON-MVP TODO:
