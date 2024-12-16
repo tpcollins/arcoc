@@ -8,6 +8,12 @@
 2. If 1 is working, test Spanish and German and fix the overlap
     NOTE: over lap is coming from sentences correcting themselves due to language barrier. For languages that are not English, might need to add -
     - more buffers between chunks or maybe even words? Not sure quite yet.
+
+
+Additional Comments:
+flushBuffer helps much more with the buffer between sentences than the processTimeout. setting the timeout there seems to ensure the program does not talk over itself
+
+After some additional testing it seems the program really only talks over itself when a new chunk is read. Still need to adjust the buffer and play with it to reduce the overlap but at 200 on the process timeout, it seems to be working almost perfectly (in English. Have not tested other languages yet)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 NON-MVP TODO:
@@ -122,7 +128,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     const handleTimeoutChange = (newTimeout: number) => {
         let multTimeout = newTimeout * 200;
         setProcessTimeOut(multTimeout); // Update the parent's state
-        console.log(`Volume updated in parent: ${processTimeout}`);
+        console.log(`Process Timeout: ${processTimeout}`);
     };
 
     // const handleErrorClick = (e: any) => {
@@ -270,17 +276,17 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
         let synthesisBuffer = ""; // Buffer for chunking words
         let bufferWordCount = 0; // Count of words in the buffer
-        const bufferThreshold = 6; // Chunk size (number of words)
+        const bufferThreshold = 15; // Chunk size (number of words)
         const initialBufferTime = 2000; // 2 seconds initial buffer delay
         let initialCache: string[] = []; // Cache for initial buffering
         let isInitialBuffering = true; // Tracks whether the initial buffer is active
         let pauseTimeout: NodeJS.Timeout | null = null;
+
+        let chunkSize = 15;
     
         // Start initial buffering timer
         setTimeout(() => {
             isInitialBuffering = false; // End initial buffering
-            console.log("Initial Cache: ", initialCache);
-            console.log("Initial buffering complete. Starting translation...");
             synthesisQueue = [...initialCache]; // Transfer cached items to the queue
             initialCache = []; // Clear the cache
             processSynthesisQueue(); // Start processing
@@ -293,8 +299,11 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 if (interimTranslatedText) {
                     console.log(`Interim Translated Text: ${interimTranslatedText}`);
                     const newWords = interimTranslatedText.split(" ");
-        
-                    console.log("New Words Array:", newWords, "Index Tracker:", indexTracker);
+
+                    for (let i = 0; i < newWords.length; i += chunkSize) {
+                        const chunk = newWords.slice(i, i + chunkSize); // Slice the array into chunks
+                        console.log(`Chunk ${Math.floor(i / chunkSize) + 1}:`, chunk);
+                    }
         
                     // Handle reset gracefully (if newWords length is less than indexTracker)
                     if (newWords.length < indexTracker) {
@@ -326,70 +335,10 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     if (pauseTimeout) clearTimeout(pauseTimeout);
                     pauseTimeout = setTimeout(() => {
                         flushBuffer(); // Flush buffer on pause
-                    }, 1000); // 1 second pause detection
+                    }, 2000); // 1 second pause detection
                 }
             }
         };
-        
-        // Handle interim recognition results
-        // translator.recognizing = (s, e) => {
-        //     if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-        //         const interimTranslatedText = e.result.translations.get(tarLocale);
-    
-        //         if (interimTranslatedText) {
-        //             console.log(`Interim Translated Text: ${interimTranslatedText}`);
-        //             const newWords = interimTranslatedText.split(" ");
-    
-        //             console.log("New Words Array:", newWords, "Index Tracker:", indexTracker);
-    
-        //             // Reset indexTracker if newWords length is less than indexTracker
-        //             if (newWords.length < indexTracker) {
-        //                 // *** This code block was causing the weird sequence of words at the end.
-        //                 // console.log("Resetting indexTracker and buffer due to newWords length reset.");
-        //                 // indexTracker = 0; // Reset tracker to start fresh
-        //                 // synthesisBuffer = ""; // Reset buffer
-        //                 // bufferWordCount = 0; // Reset buffer count
-
-        //                 // This one might have fixed it? Leaving both in for now
-        //                 console.log("Detected reset in newWords. Adjusting indexTracker.");
-        //                 // Do not reset everything; adjust indexTracker to align with the newWords array.
-        //                 indexTracker = Math.min(indexTracker, newWords.length); // Align tracker to the newWords length
-        //             }
-    
-        //             // Add only new words to the buffer
-        //             if (newWords.length > indexTracker) {
-        //                 const wordsToSpeak = newWords.slice(indexTracker).join(" ");
-        //                 synthesisBuffer += (synthesisBuffer ? " " : "") + wordsToSpeak; // Append to buffer
-        //                 bufferWordCount += newWords.length - indexTracker; // Update buffer word count
-        //                 indexTracker = newWords.length; // Update the tracker
-        //                 console.log(`Buffer updated: "${synthesisBuffer}"`);
-    
-        //                 // If still in initial buffering, cache the chunk
-        //                 if (isInitialBuffering) {
-        //                     initialCache.push(synthesisBuffer); // Add to initial cache
-        //                     console.log(`Cached for initial buffering: "${synthesisBuffer}"`);
-        //                     synthesisBuffer = ""; // Reset buffer
-        //                     bufferWordCount = 0; // Reset word count
-        //                 } else {
-        //                     // Process the buffer if it reaches the threshold
-        //                     if (bufferWordCount >= bufferThreshold) {
-        //                         synthesisQueue.push(synthesisBuffer); // Push the buffer to the queue
-        //                         console.log(`Added chunk to queue: "${synthesisBuffer}"`);
-        //                         synthesisBuffer = ""; // Reset buffer
-        //                         bufferWordCount = 0; // Reset word count
-        //                         processSynthesisQueue();
-        //                     }
-    
-        //                     // Set a timeout to flush the buffer if a pause is detected
-        //                     if (pauseTimeout) clearTimeout(pauseTimeout);
-        //                     pauseTimeout = setTimeout(() => {
-        //                         flushBuffer(); // Flush buffer on pause
-        //                     }, 1000); // 1 second pause detection
-        //                 }
-        //             }
-        //         }
-        //     }
-        // };
     
         // Process the synthesis queue
         const processSynthesisQueue = () => {
