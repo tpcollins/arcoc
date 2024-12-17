@@ -1,7 +1,7 @@
 /*
 
 **** WHERE WE ARE AT:
-12-16 TODO:
+12-17 TODO:
 
 **** View ChatGPT log "Log Chunks in Array" for a few ideas on how we can fix this issue
 
