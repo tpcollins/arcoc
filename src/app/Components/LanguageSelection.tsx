@@ -2,14 +2,16 @@
 
 **** WHERE WE ARE AT:
 12-16 TODO:
--- It seems that everything is working properly with Engish. I have tested English at 200 on the slider with 2500 on the timeout for the flush buffer. 
--- Spanish is almost there it almost sounds perfect but it still seems we are getting overlap on certain sentences due to language barrier. 
-    -- Need to play around with flush buffer and slider but there might be a better way to control this. I am just unsure of it right now
 
+**** View ChatGPT log "Log Chunks in Array" for a few ideas on how we can fix this issue
 
 2. If 1 is working, test Spanish and German and fix the overlap
     NOTE: over lap is coming from sentences correcting themselves due to language barrier. For languages that are not English, might need to add -
     - more buffers between chunks or maybe even words? Not sure quite yet.
+
+-- It seems that everything is working properly with Engish. I have tested English at 200 on the slider with 2500 on the timeout for the flush buffer. 
+-- Spanish is almost there it almost sounds perfect but it still seems we are getting overlap on certain sentences due to language barrier. 
+    -- Need to play around with flush buffer and slider but there might be a better way to control this. I am just unsure of it right now
 
 
 Additional Comments:
