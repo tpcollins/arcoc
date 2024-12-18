@@ -275,7 +275,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
     
         let synthesisQueue: string[] = []; // Queue for interim translations
-        let indexTracker = 0; // Tracks the last spoken index
+        // let indexTracker = 0; // Tracks the last spoken index
         let isSpeaking = false; // Prevents overlapping synthesis
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
         let synthesisBuffer = ""; // Buffer for chunking words
@@ -286,7 +286,10 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let isInitialBuffering = true; // Tracks whether the initial buffer is active
         let pauseTimeout: NodeJS.Timeout | null = null;
 
-        let chunkSize = 15;
+        let lastProcessedIndex = 0;
+        const pauseDetectionTimeout = 3500;
+
+        // let chunkSize = 15;
     
         // Start initial buffering timer
         setTimeout(() => {
@@ -295,57 +298,64 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             initialCache = []; // Clear the cache
             processSynthesisQueue(); // Start processing
         }, initialBufferTime);
-        
+
         translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
         
+                console.log("synthesis buffer: ", synthesisBuffer.split(" ").length);
+                console.log("buffer threshold: ", bufferThreshold);
                 if (interimTranslatedText) {
-                    console.log(`Interim Translated Text: ${interimTranslatedText}`);
-                    const newWords = interimTranslatedText.split(" ");
-
-                    for (let i = 0; i < newWords.length; i += chunkSize) {
-                        const chunk = newWords.slice(i, i + chunkSize); // Slice the array into chunks
-                        console.log(`Chunk ${Math.floor(i / chunkSize) + 1}:`, chunk);
+                    // Extract new words since the last processed index
+                    const newWords = interimTranslatedText.split(" ").slice(lastProcessedIndex);
+                    if (newWords.length > 0) {
+                        // console.log("Is new words.length > 0?: ", newWords.length);
+                        lastProcessedIndex += newWords.length; // Update index tracker
+        
+                        // Add new words to the synthesis buffer
+                        synthesisBuffer += (synthesisBuffer ? " " : "") + newWords.join(" ");
+        
+                        // Check for punctuation to finalize chunks
+                        // const sentences = synthesisBuffer.match(/[^.!?]+[.!?]+/g) || [];
+                        // console.log("sentences.length: ", sentences.length);
+                        // if (sentences.length > 0) {
+                        //     console.log("Is sentences > 0?: ", sentences.length);
+                        //     sentences.forEach((sentence) => {
+                        //         synthesisQueue.push(sentence.trim());
+                        //         processSynthesisQueue();
+                        //     });
+        
+                        //     // Remove processed sentences from the buffer
+                        //     const lastSentenceEndIndex = sentences.reduce(
+                        //         (acc, sentence) => acc + sentence.length,
+                        //         0
+                        //     );
+                        //     synthesisBuffer = synthesisBuffer.slice(lastSentenceEndIndex).trim();
+                        //     // lastProcessedIndex = 0; // Reset index tracker for new input
+                        // }
+                        
+                        // Fallback: If buffer exceeds threshold without punctuation
+                        if (synthesisBuffer.split(" ").length >= bufferThreshold) {
+                            console.log("is synthesis buffer > bufferThreshold?: ", "synthesisBuffer: ", synthesisBuffer.split(" ").length, "bufferThreshold: ", bufferThreshold)
+                            synthesisQueue.push(synthesisBuffer);
+                            synthesisBuffer = "";
+                            // lastProcessedIndex = 0; // Reset index tracker
+                            processSynthesisQueue();
+                        }
                     }
         
-                    // Handle reset gracefully (if newWords length is less than indexTracker)
-                    if (newWords.length < indexTracker) {
-                        console.log("Detected reset in newWords. Adjusting indexTracker.");
-                        indexTracker = 0; // Reset the tracker
-                    }
-        
-                    // Append words from the last processed point
-                    if (newWords.length > indexTracker) {
-                        const wordsToAdd = newWords.slice(indexTracker).join(" ");
-                        synthesisBuffer += (synthesisBuffer ? " " : "") + wordsToAdd; // Append new content to the buffer
-                        bufferWordCount += newWords.length - indexTracker; // Update the buffer count
-                        indexTracker = newWords.length; // Advance the tracker
-                        console.log(`Buffer updated: "${synthesisBuffer}"`);
-                    } else {
-                        console.log("No new words detected; maintaining current buffer.");
-                    }
-        
-                    // If the buffer reaches the threshold, flush to the synthesis queue
-                    if (bufferWordCount >= bufferThreshold) {
-                        synthesisQueue.push(synthesisBuffer); // Push the buffer to the queue
-                        console.log(`Added chunk to queue: "${synthesisBuffer}"`);
-                        synthesisBuffer = ""; // Reset the buffer
-                        bufferWordCount = 0; // Reset word count
-                        processSynthesisQueue();
-                    }
-        
-                    // Detect pauses to flush the buffer
+                    // Reset pause detection timeout
                     if (pauseTimeout) clearTimeout(pauseTimeout);
                     pauseTimeout = setTimeout(() => {
-                        flushBuffer(); // Flush buffer on pause
-                    }, 2500); // 1 second pause detection
+                        flushBuffer();
+                    }, pauseDetectionTimeout);
                 }
             }
-        };
+        };               
     
         // Process the synthesis queue
         const processSynthesisQueue = () => {
+            // console.log("does synthesis queue.length === 0?: ", synthesisQueue.length);
             if (isSpeaking || synthesisQueue.length === 0) return;
     
             const textToSpeak = synthesisQueue.shift(); // Get the next chunk
@@ -411,9 +421,11 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 synthesisQueue.push(synthesisBuffer); // Push remaining buffer to queue
                 synthesisBuffer = ""; // Reset buffer
                 bufferWordCount = 0; // Reset word count
+                lastProcessedIndex = 0;
                 processSynthesisQueue();
             }
         };
+        
     
         // Handle cancellation or errors
         translator.canceled = (s, e) => {
