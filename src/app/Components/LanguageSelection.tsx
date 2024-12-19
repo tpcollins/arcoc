@@ -2,9 +2,13 @@
 
 **** WHERE WE ARE AT:
 
+TEST BEFORE DEPLOYING TOMORROW SINCE WE COMMENTED SOME THINGS OUT*******
+
 I think we are good to go? Going to host this for Patrick and let him test it Sunday with his Spanish speakers. 
 
-At some point we will need to focus on the pronounciation and hammer in the punctuation so it flows a bit better. But as far as I can tell it is still flowing incredibly well. 
+At some point we will need to focus on the pronounciation and hammer in the punctuation so it flows a bit better. But as far as I can tell it is still flowing incredibly well. The punctuation will be an MVP item unless otherwise stated by Patrick
+
+Waiting for feedback now to see where we go from here.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 NON-MVP TODO:
@@ -475,7 +479,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             </div>
     
             {/* Move VolumeSlider Below */}
-            <div style={{ width: '700px', marginBottom: '20px', marginTop: '20px' }}>
+            {/* <div style={{ width: '700px', marginBottom: '20px', marginTop: '20px' }}>
                 <h3 className="text-center">
                     Sentence Buffer
                     <span
@@ -499,10 +503,10 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
                 </h3>
 
-                {/* Modal */}
+                
                 {isModalOpen && (
                     <>
-                    {/* Overlay */}
+                    
                     <div
                         style={{
                         position: 'fixed',
@@ -515,7 +519,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         }}
                         onClick={closeModal}
                     />
-                    {/* Modal Content */}
+                    
                     <div
                     style={{
                         position: 'fixed',
@@ -564,8 +568,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     </div>
                     </>
                 )}
-                {/* <VolumeSlider onVolumeChange={handleTimeoutChange}/> */}
-            </div>
+                <VolumeSlider onVolumeChange={handleTimeoutChange}/>
+            </div> */}
     
             {/* Play Button */}
             <div>
