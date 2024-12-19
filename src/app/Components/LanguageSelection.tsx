@@ -1,23 +1,10 @@
 /*
 
 **** WHERE WE ARE AT:
-12-17 TODO:
 
-**** View ChatGPT log "Log Chunks in Array" for a few ideas on how we can fix this issue
+I think we are good to go? Going to host this for Patrick and let him test it Sunday with his Spanish speakers. 
 
-2. If 1 is working, test Spanish and German and fix the overlap
-    NOTE: over lap is coming from sentences correcting themselves due to language barrier. For languages that are not English, might need to add -
-    - more buffers between chunks or maybe even words? Not sure quite yet.
-
--- It seems that everything is working properly with Engish. I have tested English at 200 on the slider with 2500 on the timeout for the flush buffer. 
--- Spanish is almost there it almost sounds perfect but it still seems we are getting overlap on certain sentences due to language barrier. 
-    -- Need to play around with flush buffer and slider but there might be a better way to control this. I am just unsure of it right now
-
-
-Additional Comments:
-flushBuffer helps much more with the buffer between sentences than the processTimeout. setting the timeout there seems to ensure the program does not talk over itself
-
-After some additional testing it seems the program really only talks over itself when a new chunk is read. Still need to adjust the buffer and play with it to reduce the overlap but at 200 on the process timeout, it seems to be working almost perfectly (in English. Have not tested other languages yet)
+At some point we will need to focus on the pronounciation and hammer in the punctuation so it flows a bit better. But as far as I can tell it is still flowing incredibly well. 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 NON-MVP TODO:
@@ -287,7 +274,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let pauseTimeout: NodeJS.Timeout | null = null;
 
         let lastProcessedIndex = 0;
-        const pauseDetectionTimeout = 3500;
+        const pauseDetectionTimeout = 2000;
 
         // let chunkSize = 15;
     
@@ -303,8 +290,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
         
-                console.log("synthesis buffer: ", synthesisBuffer.split(" ").length);
-                console.log("buffer threshold: ", bufferThreshold);
+                // console.log("synthesis buffer: ", synthesisBuffer.split(" ").length);
+                // console.log("buffer threshold: ", bufferThreshold);
                 if (interimTranslatedText) {
                     // Extract new words since the last processed index
                     const newWords = interimTranslatedText.split(" ").slice(lastProcessedIndex);
@@ -336,7 +323,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         
                         // Fallback: If buffer exceeds threshold without punctuation
                         if (synthesisBuffer.split(" ").length >= bufferThreshold) {
-                            console.log("is synthesis buffer > bufferThreshold?: ", "synthesisBuffer: ", synthesisBuffer.split(" ").length, "bufferThreshold: ", bufferThreshold)
+                            // console.log("is synthesis buffer > bufferThreshold?: ", "synthesisBuffer: ", synthesisBuffer.split(" ").length, "bufferThreshold: ", bufferThreshold)
                             synthesisQueue.push(synthesisBuffer);
                             synthesisBuffer = "";
                             // lastProcessedIndex = 0; // Reset index tracker
@@ -577,7 +564,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     </div>
                     </>
                 )}
-                <VolumeSlider onVolumeChange={handleTimeoutChange}/>
+                {/* <VolumeSlider onVolumeChange={handleTimeoutChange}/> */}
             </div>
     
             {/* Play Button */}
