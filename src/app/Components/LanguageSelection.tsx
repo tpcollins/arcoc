@@ -3,15 +3,9 @@
 // **** WHERE WE ARE AT:
 // 12-17 TODO:
 
-// **** View ChatGPT log "Log Chunks in Array" for a few ideas on how we can fix this issue
+// Issues arising. Having lots of trouble with newWords array. Trying to figure out why at a certain point it just stops adding words
 
-// 2. If 1 is working, test Spanish and German and fix the overlap
-//     NOTE: over lap is coming from sentences correcting themselves due to language barrier. For languages that are not English, might need to add -
-//     - more buffers between chunks or maybe even words? Not sure quite yet.
-
-// -- It seems that everything is working properly with Engish. I have tested English at 200 on the slider with 2500 on the timeout for the flush buffer. 
-// -- Spanish is almost there it almost sounds perfect but it still seems we are getting overlap on certain sentences due to language barrier. 
-//     -- Need to play around with flush buffer and slider but there might be a better way to control this. I am just unsure of it right now
+// See GPT log Speech Translation Issue Debugging for potential fixes
 
 
 // Additional Comments:
@@ -896,20 +890,19 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     }, [isPlaying, isDrpDwnDisabled]);  
 
-    // This one defines a chunk as 10 words but also includes an initial buffer
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
             "eastus2"
         );
-    
+
         speechConfig.speechRecognitionLanguage = "en-US";
         speechConfig.addTargetLanguage(tarLocale);
         speechConfig.voiceName = shortName;
-    
+
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
         translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-    
+
         let synthesisQueue: string[] = []; // Queue for interim translations
         // let indexTracker = 0; // Tracks the last spoken index
         let isSpeaking = false; // Prevents overlapping synthesis
@@ -922,11 +915,14 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let isInitialBuffering = true; // Tracks whether the initial buffer is active
         let pauseTimeout: NodeJS.Timeout | null = null;
 
+        let arrayStuck = true; 
+        let newWords: string[] = [];
+
         let lastProcessedIndex = 0;
         const pauseDetectionTimeout = 2500;
 
         // let chunkSize = 15;
-    
+
         // Start initial buffering timer
         setTimeout(() => {
             isInitialBuffering = false; // End initial buffering
@@ -938,80 +934,81 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
-        
+                
+                console.log("interimTranslatedText: ", interimTranslatedText);
+                console.log("synthesis buffer: ", synthesisBuffer.split(" ").length);
+                console.log("buffer threshold: ", bufferThreshold);
                 if (interimTranslatedText) {
-                    console.log("Interim Translated Text: ", interimTranslatedText);
-        
-                    // Detect if lastProcessedIndex is out of bounds
-                    if (lastProcessedIndex > interimTranslatedText.split(" ").length) {
-                        console.warn(
-                            `Detected index misalignment: lastProcessedIndex=${lastProcessedIndex}, interim length=${interimTranslatedText.split(" ").length}`
-                        );
-                        lastProcessedIndex = 0; // Reset the index
-                    }
-        
+                    // console.log("interim translated text: ", interimTranslatedText);
                     // Extract new words since the last processed index
-                    const newWords = interimTranslatedText.split(" ").slice(lastProcessedIndex);
-                    console.log("New words: ", newWords);
-        
+                    newWords = interimTranslatedText.split(" ").slice(lastProcessedIndex);
+
+
+                    console.log("new words: ", newWords);
+                    console.log("lastProcessedIndex: ", lastProcessedIndex);
+                    console.log("new words length: ", newWords.length);
                     if (newWords.length > 0) {
-                        console.log("newWords.length > 0 triggered");
+                        arrayStuck = false;
+                        console.log("new words.length > 0 triggered");
+                        // console.log("Is new words.length > 0?: ", newWords.length);
+                        lastProcessedIndex += newWords.length; // Update index tracker
         
-                        // Update the buffer and index tracker
-                        lastProcessedIndex += newWords.length;
+                        // Add new words to the synthesis buffer
                         synthesisBuffer += (synthesisBuffer ? " " : "") + newWords.join(" ");
-                        console.log(`Updated synthesis buffer: "${synthesisBuffer}"`);
-        
-                        // Flush buffer if it exceeds the threshold
+                        
+                        // Fallback: If buffer exceeds threshold without punctuation
                         if (synthesisBuffer.split(" ").length >= bufferThreshold) {
-                            console.log("Buffer threshold reached. Flushing buffer.");
-                            flushBuffer();
+                            console.log("is synthesis buffer > bufferThreshold?: ", "synthesisBuffer: ", synthesisBuffer.split(" ").length, "bufferThreshold: ", bufferThreshold)
+                            synthesisQueue.push(synthesisBuffer);
+                            synthesisBuffer = "";
+                            processSynthesisQueue();
                         }
+                    }else{
+                        arrayStuck = true;
                     }
         
                     // Reset pause detection timeout
                     if (pauseTimeout) clearTimeout(pauseTimeout);
                     pauseTimeout = setTimeout(() => {
-                        console.log("Pause detected. Flushing buffer.");
                         flushBuffer();
                     }, pauseDetectionTimeout);
                 }
             }
-        };                       
-    
+        };               
+
         // Process the synthesis queue
         const processSynthesisQueue = () => {
             // console.log("does synthesis queue.length === 0?: ", synthesisQueue.length);
             if (isSpeaking || synthesisQueue.length === 0) return;
-    
+
             const textToSpeak = synthesisQueue.shift(); // Get the next chunk
             if (textToSpeak) {
-                console.log(`Processing chunk: "${textToSpeak}"`);
+                console.log("Processing chunk: ${textToSpeak}");
                 synthesizeSpeech(textToSpeak);
             }
         };
-    
+
         // Synthesize speech
         const synthesizeSpeech = async (text: string) => {
             if (currentSynthesizer) {
                 currentSynthesizer.close();
                 currentSynthesizer = null;
             }
-    
+
             const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
             synthConfig.speechSynthesisVoiceName = shortName;
-    
+
             const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
             currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
             isSpeaking = true;
-    
+
             try {
                 await new Promise<void>((resolve, reject) => {
                     currentSynthesizer?.speakTextAsync(
                         text,
                         (result) => {
                             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                                console.log(`Synthesis complete: "${text}"`);
+                                console.log("Synthesis complete: ${text}");
                                 resolve();
                             } else {
                                 console.error("Synthesis failed:", result.errorDetails);
@@ -1028,22 +1025,22 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 console.error("Error during synthesis:", error);
             } finally {
                 isSpeaking = false;
-    
+
                 // Close the synthesizer after use to free resources
                 if (currentSynthesizer) {
                     currentSynthesizer.close();
                     currentSynthesizer = null;
                 }
-    
+
                 // Process the next item in the synthesis queue
                 setTimeout(processSynthesisQueue, processTimeout);
             }
         };
-    
+
         // Flush the buffer on pauses
         const flushBuffer = () => {
             if (synthesisBuffer) {
-                console.log(`Flushing buffer to queue: "${synthesisBuffer}"`);
+                console.log("Flushing buffer to queue: ${synthesisBuffer}");
         
                 // Push the buffer to the queue
                 synthesisQueue.push(synthesisBuffer.trim());
@@ -1055,22 +1052,44 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 processSynthesisQueue(); // Start processing the queue
             }
         };
+
+        // Fallback: Periodically check the synthesis buffer
+        // setInterval(() => {
+        //     if (arrayStuck){
+        //         lastProcessedIndex++; // Update index tracker
+        //         console.log("lpi in arrayStuck updated");
         
-    
+        //         // Add new words to the synthesis buffer
+        //         synthesisBuffer += (synthesisBuffer ? " " : "") + newWords.join(" ");
+        //         console.log("sb in arrayStuck updated");
+                
+        //         // Fallback: If buffer exceeds threshold without punctuation
+        //         synthesisQueue.push(synthesisBuffer);
+        //         synthesisBuffer = "";
+        //         processSynthesisQueue();
+        //     }
+        // }, 1000); // Check every 1 second
+
         // Handle cancellation or errors
         translator.canceled = (s, e) => {
-            console.error(`Translation canceled: ${e.reason}, Error: ${e.errorDetails}`);
+            console.error("Translation canceled: ${e.reason}, Error: ${e.errorDetails}");
         };
-    
+
         // Start continuous recognition
         translator.startContinuousRecognitionAsync(() => {
             console.log("Continuous recognition started.");
         }, (error) => {
             console.error("Error starting continuous recognition:", error);
         });
-    
+
+        // translator.sessionStopped  = (s, e) => 
+        //     console.log("Recognizer stopped, restarting...");
+        //     translator?.startContinuousRecognitionAsync();
+        // };        
+
         return { translator };
-    };    
+    };
+
 
     return (
         <>
