@@ -227,226 +227,214 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //     };
         
     // }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       
     // Original useEffect for isPlaying
     useEffect(() => {
-        // console.log("isPlaying: ", isPlaying);
-        if (isPlaying) {
-            translator = startContinuousTranslation().translator;
-            setIsDrpDwnDisabled(true);
-        } else if (translator) {
-            translator.stopContinuousRecognitionAsync(() => {
-                // console.log("Continuous recognition stopped");
-            });
+    if (isPlaying) {
+        translator = startContinuousTranslation().translator;
+        setIsDrpDwnDisabled(true);
+    } else if (translator) {
+        translator.stopContinuousRecognitionAsync();
+    }
+
+    if (!isPlaying) {
+        setIsDrpDwnDisabled(false);
+    }
+
+    return () => {
+        translator?.stopContinuousRecognitionAsync();
+    };
+}, [isPlaying, isDrpDwnDisabled]);
+
+const startContinuousTranslation = () => {
+    const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
+        apiKey as string,
+        "eastus2"
+    );
+
+    speechConfig.speechRecognitionLanguage = "en-US";
+    speechConfig.addTargetLanguage(tarLocale);
+    speechConfig.voiceName = shortName;
+
+    const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
+
+    let synthesisQueue: string[] = []; 
+    let isSpeaking = false; 
+    let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
+    let currentSentenceBuffer = ""; // Store current sentence being formed
+    let lastRecognizedText = ""; // Store the last processed full sentence
+
+    const punctuationMarks = /[.!?]/; // Used to detect full sentences
+
+    // Process the synthesis queue
+    const processSynthesisQueue = () => {
+        if (isSpeaking || synthesisQueue.length === 0) return;
+
+        const textToSpeak = synthesisQueue.shift(); // Get the next sentence
+        if (textToSpeak) {
+            console.log("Processing chunk:", textToSpeak);
+            synthesizeSpeech(textToSpeak);
+        }
+    };
+
+    // Synthesize speech
+    const synthesizeSpeech = async (text: string) => {
+        if (currentSynthesizer) {
+            currentSynthesizer.close();
+            currentSynthesizer = null;
         }
 
-        if(!isPlaying){
-            setIsDrpDwnDisabled(false);
-            // startContinuousTranslation().stopTranslation;
-        }
-        // console.log("isDrpDwnDisabled: ", isDrpDwnDisabled);
+        const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
+        synthConfig.speechSynthesisVoiceName = shortName;
 
-        return () => {
-            // Ensure cleanup on unmount
-            translator?.stopContinuousRecognitionAsync();
-        };
-    }, [isPlaying, isDrpDwnDisabled]);  
+        const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+        currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+        isSpeaking = true;
 
-    const startContinuousTranslation = () => {
-        const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-            apiKey as string,
-            "eastus2"
-        );
-
-        speechConfig.speechRecognitionLanguage = "en-US";
-        speechConfig.addTargetLanguage(tarLocale);
-        speechConfig.voiceName = shortName;
-
-        const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-        translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-
-        let synthesisQueue: string[] = []; // Queue for interim translations
-        // let indexTracker = 0; // Tracks the last spoken index
-        let isSpeaking = false; // Prevents overlapping synthesis
-        let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
-        let synthesisBuffer = ""; // Buffer for chunking words
-        let bufferWordCount = 0; // Count of words in the buffer
-        const bufferThreshold = 15; // Chunk size (number of words)
-        const initialBufferTime = 2000; // 2 seconds initial buffer delay
-        let initialCache: string[] = []; // Cache for initial buffering
-        let isInitialBuffering = true; // Tracks whether the initial buffer is active
-        let pauseTimeout: NodeJS.Timeout | null = null;
-
-        let arrayStuck = true; 
-        let newWords: string[] = [];
-
-        let lastProcessedIndex = 0;
-        const pauseDetectionTimeout = 2500;
-
-        // let chunkSize = 15;
-
-        // Start initial buffering timer
-        setTimeout(() => {
-            isInitialBuffering = false; // End initial buffering
-            synthesisQueue = [...initialCache]; // Transfer cached items to the queue
-            initialCache = []; // Clear the cache
-            processSynthesisQueue(); // Start processing
-        }, initialBufferTime);
-
-        translator.recognizing = (s, e) => {
-            if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-                const interimTranslatedText = e.result.translations.get(tarLocale);
-        
-                if (interimTranslatedText) {
-                    console.log("interimTranslatedText: ", interimTranslatedText);
-                    console.log("split interimTranslatedText: ", interimTranslatedText.split(" "));
-                    console.log("lastProcessedIndex: ", lastProcessedIndex);
-        
-                    // Extract new words since the last processed index
-                    const splitText = interimTranslatedText.split(" ");
-                    let newWords = splitText.slice(lastProcessedIndex);
-        
-                    console.log("newWords calculation: ", newWords);
-        
-                    if (newWords.length > 0) {
-                        console.log("new words.length > 0 triggered");
-        
-                        // Update lastProcessedIndex to match the current length of splitText
-                        lastProcessedIndex = splitText.length;
-        
-                        // Add new words to the synthesis buffer
-                        synthesisBuffer += (synthesisBuffer ? " " : "") + newWords.join(" ");
-                        console.log("synthesisBuffer updated: ", synthesisBuffer);
-        
-                        // Check if the buffer exceeds the threshold
-                        if (synthesisBuffer.split(" ").length >= bufferThreshold) {
-                            console.log("Buffer exceeded threshold, adding to synthesis queue.");
-                            synthesisQueue.push(synthesisBuffer);
-                            synthesisBuffer = ""; // Clear the buffer
-                            processSynthesisQueue();
+        try {
+            await new Promise<void>((resolve, reject) => {
+                currentSynthesizer?.speakTextAsync(
+                    text,
+                    (result) => {
+                        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                            console.log("Synthesis complete:", text);
+                            resolve();
+                        } else {
+                            console.error("Synthesis failed:", result.errorDetails);
+                            reject(new Error(result.errorDetails));
                         }
-                    } else {
-                        console.log("No new words detected.");
+                    },
+                    (error) => {
+                        console.error("Error during speech synthesis:", error);
+                        reject(error);
                     }
-        
-                    // Update lastProcessedIndex unconditionally to prevent getting stuck
-                    if (lastProcessedIndex > splitText.length) {
-                        console.warn("Resetting lastProcessedIndex to match splitText length.");
-                        lastProcessedIndex = splitText.length;
-                    }
-        
-                    console.log("Updated lastProcessedIndex: ", lastProcessedIndex);
-        
-                    // Reset pause detection timeout
-                    if (pauseTimeout) clearTimeout(pauseTimeout);
-                    pauseTimeout = setTimeout(() => {
-                        flushBuffer();
-                    }, pauseDetectionTimeout);
-                }
-            }
-        };                       
-
-        // Process the synthesis queue
-        const processSynthesisQueue = () => {
-            // console.log("does synthesis queue.length === 0?: ", synthesisQueue.length);
-            if (isSpeaking || synthesisQueue.length === 0) return;
-
-            const textToSpeak = synthesisQueue.shift(); // Get the next chunk
-            if (textToSpeak) {
-                console.log("Processing chunk: ${textToSpeak}");
-                synthesizeSpeech(textToSpeak);
-            }
-        };
-
-        // Synthesize speech
-        const synthesizeSpeech = async (text: string) => {
+                );
+            });
+        } catch (error) {
+            console.error("Error during synthesis:", error);
+        } finally {
+            isSpeaking = false;
             if (currentSynthesizer) {
                 currentSynthesizer.close();
                 currentSynthesizer = null;
             }
-
-            const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
-            synthConfig.speechSynthesisVoiceName = shortName;
-
-            const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-            currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-            isSpeaking = true;
-
-            try {
-                await new Promise<void>((resolve, reject) => {
-                    currentSynthesizer?.speakTextAsync(
-                        text,
-                        (result) => {
-                            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                                console.log("Synthesis complete: ${text}");
-                                resolve();
-                            } else {
-                                console.error("Synthesis failed:", result.errorDetails);
-                                reject(new Error(result.errorDetails));
-                            }
-                        },
-                        (error) => {
-                            console.error("Error during speech synthesis:", error);
-                            reject(error);
-                        }
-                    );
-                });
-            } catch (error) {
-                console.error("Error during synthesis:", error);
-            } finally {
-                isSpeaking = false;
-
-                // Close the synthesizer after use to free resources
-                if (currentSynthesizer) {
-                    currentSynthesizer.close();
-                    currentSynthesizer = null;
-                }
-
-                // Process the next item in the synthesis queue
-                setTimeout(processSynthesisQueue, processTimeout);
-            }
-        };
-
-        // Flush the buffer on pauses
-        const flushBuffer = () => {
-            if (synthesisBuffer) {
-                console.log("Flushing buffer to queue: ${synthesisBuffer}");
-        
-                // Push the buffer to the queue
-                synthesisQueue.push(synthesisBuffer.trim());
-        
-                // Clear buffer and reset relevant variables
-                synthesisBuffer = "";
-                bufferWordCount = 0;
-                lastProcessedIndex = 0; // Reset index tracker
-                processSynthesisQueue(); // Start processing the queue
-            }
-        };
-
-        // Handle cancellation or errors
-        translator.canceled = (s, e) => {
-            console.error("Translation canceled: ${e.reason}, Error: ${e.errorDetails}");
-        };
-
-        // Start continuous recognition
-        translator.startContinuousRecognitionAsync(() => {
-            console.log("Continuous recognition started.");
-        }, (error) => {
-            console.error("Error starting continuous recognition:", error);
-        });
-
-        // translator.sessionStopped  = (s, e) => 
-        //     console.log("Recognizer stopped, restarting...");
-        //     translator?.startContinuousRecognitionAsync();
-        // };
-
-        // translator.sessionStopped = (s,e) => {
-        //     console.log("Recognizer Stopped");
-        //     translator?.startContinuousRecognitionAsync();
-        // }
-
-        return { translator };
+            setTimeout(processSynthesisQueue, 100); // Prevent immediate overlap
+        }
     };
+
+    let lastRecognizingText = "";
+    let sentenceBuffer = "";
+    let lastWordCount = 0;
+    let sentenceTimeout: NodeJS.Timeout | null = null;
+    const pauseThreshold = 1500; // 1.5s of no updates = sentence completed
+    
+    translator.recognizing = (s, e) => {
+        if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+            const interimTranslatedText = e.result.translations.get(tarLocale);
+            
+            if (interimTranslatedText) {
+                console.log("Interim (Buffering):", interimTranslatedText);
+    
+                // If the text is repeating itself due to reformulation, do nothing
+                if (interimTranslatedText === lastRecognizingText) return;
+                lastRecognizingText = interimTranslatedText;
+    
+                // Append new words to the buffer
+                sentenceBuffer = interimTranslatedText;
+    
+                // Word count tracking
+                const wordCount = sentenceBuffer.split(" ").length;
+    
+                // If words are not increasing, assume pause
+                if (wordCount === lastWordCount) {
+                    if (!sentenceTimeout) {
+                        sentenceTimeout = setTimeout(() => {
+                            console.log("Detected pause, pushing sentence:", sentenceBuffer);
+                            
+                            // Push the sentence to synthesis queue
+                            synthesisQueue.push(sentenceBuffer.trim());
+                            processSynthesisQueue();
+                            
+                            // Reset buffer
+                            sentenceBuffer = "";
+                            lastRecognizingText = "";
+                        }, pauseThreshold);
+                    }
+                } else {
+                    // If words are still coming in, clear timeout
+                    if (sentenceTimeout) {
+                        clearTimeout(sentenceTimeout);
+                        sentenceTimeout = null;
+                    }
+                }
+    
+                lastWordCount = wordCount;
+            }
+        }
+    };
+    
+    // Recognized for final corrections
+    translator.recognized = (s, e) => {
+        if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+            const finalizedText = e.result.translations.get(tarLocale);
+    
+            if (finalizedText && finalizedText !== lastRecognizingText) {
+                console.log("Finalized:", finalizedText);
+    
+                // Push finalized sentence to synthesis queue
+                synthesisQueue.push(finalizedText.trim());
+                processSynthesisQueue();
+            }
+        }
+    };
+    
+    
+
+    // Handle cancellation or errors
+    translator.canceled = (s, e) => {
+        console.error("Translation canceled:", e.reason, "Error:", e.errorDetails);
+    };
+
+    translator.startContinuousRecognitionAsync(() => {
+        console.log("Continuous recognition started.");
+    }, (error) => {
+        console.error("Error starting continuous recognition:", error);
+    });
+
+    return { translator };
+};
 
 
     return (
