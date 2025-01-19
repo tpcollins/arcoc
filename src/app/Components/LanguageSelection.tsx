@@ -277,6 +277,144 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     };
 }, [isPlaying, isDrpDwnDisabled]);
 
+// const startContinuousTranslation = () => {
+//     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
+//         apiKey as string,
+//         "eastus2"
+//     );
+
+//     speechConfig.speechRecognitionLanguage = "en-US";
+//     speechConfig.addTargetLanguage(tarLocale);
+//     speechConfig.voiceName = shortName;
+
+//     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+//     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
+
+//     let synthesisQueue: string[] = []; 
+//     let isSpeaking = false; 
+//     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
+//     let currentSentenceBuffer = ""; // Temporary storage for words
+//     let lastRecognizedText = ""; // Last processed finalized text
+//     let lastRecognizingText = ""; // Track the last recognized snippet
+//     let sentenceTimeout: NodeJS.Timeout | null = null;
+//     const pauseThreshold = 1000; // 1.5s pause detection for sentence segmentation
+
+//     // Process the synthesis queue
+//     const processSynthesisQueue = () => {
+//         if (isSpeaking || synthesisQueue.length === 0) return;
+
+//         const textToSpeak = synthesisQueue.shift(); // Get the next sentence
+//         if (textToSpeak) {
+//             console.log("Processing chunk:", textToSpeak);
+//             synthesizeSpeech(textToSpeak);
+//         }
+//     };
+
+//     // Synthesize speech
+//     const synthesizeSpeech = async (text: string) => {
+//         if (currentSynthesizer) {
+//             currentSynthesizer.close();
+//             currentSynthesizer = null;
+//         }
+
+//         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
+//         synthConfig.speechSynthesisVoiceName = shortName;
+
+//         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+//         currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+//         isSpeaking = true;
+
+//         try {
+//             await new Promise<void>((resolve, reject) => {
+//                 currentSynthesizer?.speakTextAsync(
+//                     text,
+//                     (result) => {
+//                         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+//                             console.log("Synthesis complete:", text);
+//                             resolve();
+//                         } else {
+//                             console.error("Synthesis failed:", result.errorDetails);
+//                             reject(new Error(result.errorDetails));
+//                         }
+//                     },
+//                     (error) => {
+//                         console.error("Error during speech synthesis:", error);
+//                         reject(error);
+//                     }
+//                 );
+//             });
+//         } catch (error) {
+//             console.error("Error during synthesis:", error);
+//         } finally {
+//             isSpeaking = false;
+//             if (currentSynthesizer) {
+//                 currentSynthesizer.close();
+//                 currentSynthesizer = null;
+//             }
+//             setTimeout(processSynthesisQueue, 100); // Prevent immediate overlap
+//         }
+//     };
+
+//     // Translator Recognizing Event (For Immediate Capture)
+//     translator.recognizing = (s, e) => {
+//         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+//             const interimTranslatedText = e.result.translations.get(tarLocale);
+
+//             if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
+//                 console.log("Interim (Buffering):", interimTranslatedText);
+
+//                 // Replace previous text instead of appending
+//                 currentSentenceBuffer = interimTranslatedText;
+//                 lastRecognizingText = interimTranslatedText;
+
+//                 // If no new words for a short period, assume sentence completion
+//                 if (sentenceTimeout) clearTimeout(sentenceTimeout);
+//                 sentenceTimeout = setTimeout(() => {
+//                     console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
+
+//                     // Push finalized sentence and clear buffer
+//                     synthesisQueue.push(currentSentenceBuffer.trim());
+//                     currentSentenceBuffer = "";
+//                     lastRecognizingText = "";
+
+//                     processSynthesisQueue();
+//                 }, pauseThreshold);
+//             }
+//         }
+//     };
+
+//     // Translator Recognized Event (Finalized Sentences)
+//     translator.recognized = (s, e) => {
+//         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+//             const finalizedText = e.result.translations.get(tarLocale);
+
+//             if (finalizedText && finalizedText !== lastRecognizedText) {
+//                 console.log("✅ Finalized Sentence:", finalizedText);
+
+//                 // Ensure only structured sentences are added
+//                 synthesisQueue.push(finalizedText.trim());
+//                 lastRecognizedText = finalizedText;
+
+//                 processSynthesisQueue();
+//             }
+//         }
+//     };
+
+//     // Handle cancellation or errors
+//     translator.canceled = (s, e) => {
+//         console.error("Translation canceled:", e.reason, "Error:", e.errorDetails);
+//     };
+
+//     translator.startContinuousRecognitionAsync(() => {
+//         console.log("✅ Continuous recognition started.");
+//     }, (error) => {
+//         console.error("❌ Error starting continuous recognition:", error);
+//     });
+
+//     return { translator };
+// };
+
+
 const startContinuousTranslation = () => {
     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
         apiKey as string,
@@ -290,22 +428,30 @@ const startContinuousTranslation = () => {
     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
 
-    let synthesisQueue: string[] = []; 
+    let sentenceQueue: string[] = []; // Store fully formed sentences
+    let lastRecognizingText = ""; // Track interim sentence progress
+    let currentSentenceBuffer = ""; // Temporary storage for words
     let isSpeaking = false; 
     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
-    let currentSentenceBuffer = ""; // Store current sentence being formed
-    let lastRecognizedText = ""; // Store the last processed full sentence
+    let sentenceTimeout: NodeJS.Timeout | null = null;
+    const pauseThreshold = 1200; // Reduce for quicker sentence finalization
 
-    const punctuationMarks = /[.!?]/; // Used to detect full sentences
-
-    // Process the synthesis queue
-    const processSynthesisQueue = () => {
-        if (isSpeaking || synthesisQueue.length === 0) return;
-
-        const textToSpeak = synthesisQueue.shift(); // Get the next sentence
+    let sentenceCounter = 0; // Tracks how many sentences have been added
+    let lastProcessedIndex = 0; // Tracks which sentence was last spoken
+    
+    const processSynthesisQueue = async () => {
+        console.log("psq triggered");
+        console.log("sentence queue lenghth: ", sentenceQueue.length);
+        if (isSpeaking || lastProcessedIndex >= sentenceQueue.length) return;
+    
+        const textToSpeak = sentenceQueue[lastProcessedIndex]; // Speak only new sentences
+        lastProcessedIndex++; // Move to the next sentence
+        console.log("text to speak: ", textToSpeak);
+    
         if (textToSpeak) {
-            console.log("Processing chunk:", textToSpeak);
-            synthesizeSpeech(textToSpeak);
+            console.log("🗣 Speaking:", textToSpeak);
+            await synthesizeSpeech(textToSpeak);
+            processSynthesisQueue(); // Recursively process the next sentence
         }
     };
 
@@ -354,58 +500,70 @@ const startContinuousTranslation = () => {
         }
     };
 
-    // Translator Recognizing Event (For Immediate Capture)
-    translator.recognizing = (s, e) => {
+    // ✅ Event: Recognizing (Interim Results)
+    translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
             const interimTranslatedText = e.result.translations.get(tarLocale);
+    
+            if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
+                console.log("🔄 Interim (Buffering):", interimTranslatedText);
+    
+                currentSentenceBuffer = interimTranslatedText;
+                lastRecognizingText = interimTranslatedText;
+    
+                if (sentenceTimeout) clearTimeout(sentenceTimeout);
+                sentenceTimeout = setTimeout(() => {
+                    console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
+    
+                    // ✅ Ensure the sentence has punctuation
+                    if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
+                        currentSentenceBuffer += "."; // Append period if missing
+                    }
 
-            if (interimTranslatedText) {
-                console.log("Interim:", interimTranslatedText);
+                    // ✅ Track punctuation-based count
+                    sentenceCounter++;
+                    console.log("sentence counter: ", sentenceCounter);
+    
+                    // ✅ Add only unique sentences to queue
+                    // if (!sentenceQueue.includes(currentSentenceBuffer.trim())) {
+                    //     sentenceQueue.push(currentSentenceBuffer.trim());
+                    // }
 
-                // Append new words to the current sentence buffer
-                currentSentenceBuffer += " " + interimTranslatedText;
+                    // ✅ Add sentence to queue and update lastProcessedIndex
+                    sentenceQueue.push(currentSentenceBuffer.trim());
+                    // lastProcessedIndex = sentenceCounter; // Ensure it only reads new sentences
 
-                // If a punctuation mark is detected, move to queue
-                if (punctuationMarks.test(interimTranslatedText)) {
-                    synthesisQueue.push(currentSentenceBuffer.trim());
+                    console.log("sentenceQueue", sentenceQueue);
+                    console.log("last processed index: ", lastProcessedIndex);
+    
                     currentSentenceBuffer = "";
-                    processSynthesisQueue();
-                }
-            }
-        }
-    };
-
-    // Translator Recognized Event (Finalized Sentences)
-    translator.recognized = (s, e) => {
-        if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-            const finalizedText = e.result.translations.get(tarLocale);
+                    lastRecognizingText = "";
     
-            if (finalizedText && finalizedText !== lastRecognizedText) {
-                console.log("Finalized:", finalizedText);
-    
-                // Ensure only fully formulated sentences are added
-                synthesisQueue.push(finalizedText.trim());
-                lastRecognizedText = finalizedText;
-    
-                processSynthesisQueue();
+                    // processSynthesisQueue();
+                }, pauseThreshold);
             }
         }
     };
     
-
-    // Handle cancellation or errors
+    // ✅ Event: Handle Cancellations
     translator.canceled = (s, e) => {
-        console.error("Translation canceled:", e.reason, "Error:", e.errorDetails);
+        console.error("❌ Translation canceled:", e.reason, "Error:", e.errorDetails);
     };
 
-    translator.startContinuousRecognitionAsync(() => {
-        console.log("Continuous recognition started.");
-    }, (error) => {
-        console.error("Error starting continuous recognition:", error);
-    });
+    // ✅ Start Continuous Recognition
+    translator.startContinuousRecognitionAsync(
+        () => {
+            console.log("✅ Continuous recognition started.");
+        },
+        (error) => {
+            console.error("❌ Error starting continuous recognition:", error);
+        }
+    );
 
     return { translator };
 };
+
+
 
 
     return (
