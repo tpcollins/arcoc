@@ -354,72 +354,43 @@ const startContinuousTranslation = () => {
         }
     };
 
-    let lastRecognizingText = "";
-    let sentenceBuffer = "";
-    let lastWordCount = 0;
-    let sentenceTimeout: NodeJS.Timeout | null = null;
-    const pauseThreshold = 1500; // 1.5s of no updates = sentence completed
-    
+    // Translator Recognizing Event (For Immediate Capture)
     translator.recognizing = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
             const interimTranslatedText = e.result.translations.get(tarLocale);
-            
+
             if (interimTranslatedText) {
-                console.log("Interim (Buffering):", interimTranslatedText);
-    
-                // If the text is repeating itself due to reformulation, do nothing
-                if (interimTranslatedText === lastRecognizingText) return;
-                lastRecognizingText = interimTranslatedText;
-    
-                // Append new words to the buffer
-                sentenceBuffer = interimTranslatedText;
-    
-                // Word count tracking
-                const wordCount = sentenceBuffer.split(" ").length;
-    
-                // If words are not increasing, assume pause
-                if (wordCount === lastWordCount) {
-                    if (!sentenceTimeout) {
-                        sentenceTimeout = setTimeout(() => {
-                            console.log("Detected pause, pushing sentence:", sentenceBuffer);
-                            
-                            // Push the sentence to synthesis queue
-                            synthesisQueue.push(sentenceBuffer.trim());
-                            processSynthesisQueue();
-                            
-                            // Reset buffer
-                            sentenceBuffer = "";
-                            lastRecognizingText = "";
-                        }, pauseThreshold);
-                    }
-                } else {
-                    // If words are still coming in, clear timeout
-                    if (sentenceTimeout) {
-                        clearTimeout(sentenceTimeout);
-                        sentenceTimeout = null;
-                    }
+                console.log("Interim:", interimTranslatedText);
+
+                // Append new words to the current sentence buffer
+                currentSentenceBuffer += " " + interimTranslatedText;
+
+                // If a punctuation mark is detected, move to queue
+                if (punctuationMarks.test(interimTranslatedText)) {
+                    synthesisQueue.push(currentSentenceBuffer.trim());
+                    currentSentenceBuffer = "";
+                    processSynthesisQueue();
                 }
-    
-                lastWordCount = wordCount;
             }
         }
     };
-    
-    // Recognized for final corrections
+
+    // Translator Recognized Event (Finalized Sentences)
     translator.recognized = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
             const finalizedText = e.result.translations.get(tarLocale);
     
-            if (finalizedText && finalizedText !== lastRecognizingText) {
+            if (finalizedText && finalizedText !== lastRecognizedText) {
                 console.log("Finalized:", finalizedText);
     
-                // Push finalized sentence to synthesis queue
+                // Ensure only fully formulated sentences are added
                 synthesisQueue.push(finalizedText.trim());
+                lastRecognizedText = finalizedText;
+    
                 processSynthesisQueue();
             }
         }
     };
-    
     
 
     // Handle cancellation or errors
