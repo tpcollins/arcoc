@@ -610,7 +610,7 @@ const startContinuousTranslation = () => {
     
         console.log("🔄 Processing full queue:", sentenceQueue);
         await synthesizeSpeech(sentenceQueue); // ✅ Pass the full array
-    };    
+    };
 
     // Synthesize speech
     const synthesizeSpeech = async (textArray: string[]) => {
@@ -703,7 +703,7 @@ const startContinuousTranslation = () => {
                     currentSentenceBuffer = "";
                     lastRecognizingText = "";
     
-                    processSynthesisQueue();
+                    // processSynthesisQueue();
                 }, pauseThreshold);
             }
         }
