@@ -633,7 +633,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             await synthesizeSpeech(sentenceQueue);
     
             isSpeaking = false; // Unlock speaking
-            // sentenceQueue.length = 0; // Clears the array completely
+            sentenceQueue.length = 0; // Clears the array completely
             console.log("✅ Queue is empty, waiting for new sentences.");
         };
     
