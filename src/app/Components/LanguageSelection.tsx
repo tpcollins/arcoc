@@ -2,9 +2,6 @@
 
 next steps: 
 - use startContinuosTranslation that is marked with: usethisone
-    - audio duraton is being tracked. We need to add more logs to see if we can somehow use the numbers to control when isSpeaking is set to false
-        it looks like isSpeaking is being set to false too early which is causing the overlap between speaking
-
     - we also might need to go back to sending in string arrays to synthesizeSpeech rather than individual strings. This is in one of the commented out
         startContinuousTranslation methods
 
@@ -420,10 +417,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
 
-    // This one is blocking synthesis from occurring before the current synthesis is finished, however, it is taking way too long in between synthesis -
-    // - and it is cutting out the last 2-3 words for some reason from the next synthesis
-    
-    // usethisone
+
+
     // const startContinuousTranslation = () => {
     //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
     //         apiKey as string,
@@ -443,36 +438,38 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //     let isSpeaking = false; 
     //     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
     //     let sentenceTimeout: NodeJS.Timeout | null = null;
-    //     const pauseThreshold = 1200; // Reduce for quicker sentence finalization
+    //     const pauseThreshold = 950; // Adjust for optimal flow
     
-    //     // ✅ Process sentences one at a time
+    //     // ✅ **Continuous Processing Loop**
     //     const processSynthesisQueue = async () => {
-    //         console.log("isSpeaking: ", isSpeaking);
-    //         console.log("sentenceQueue before if: ", sentenceQueue);
-            
     //         if (isSpeaking || sentenceQueue.length === 0) {
-    //             console.log("🚫 processSynthesisQueue blocked - Still speaking or queue empty");
-    //             return;
+    //             return; // Don't re-trigger if already speaking
     //         }
-
-    //         console.log("sentenceQueue before if: ", sentenceQueue);
+    
+    //         isSpeaking = true; // Lock speaking
+    //         console.log("🔄 Processing queue:", sentenceQueue);
+    
     //         await synthesizeSpeech(sentenceQueue);
+    
+    //         isSpeaking = false; // Unlock speaking
+    //         sentenceQueue.length = 0; // Clears the array completely
+    //         console.log("✅ Queue is empty, waiting for new sentences.");
     //     };
     
-    //     // ✅ Synthesize speech sequentially & ensure full audio playback
+    //     // ✅ **Optimized Synthesis Method**
     //     const synthesizeSpeech = async (textArray: string[]) => {
     //         if (currentSynthesizer) {
     //             currentSynthesizer.close();
     //             currentSynthesizer = null;
     //         }
-        
+    
     //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
     //         synthConfig.speechSynthesisVoiceName = shortName;
-        
+    
     //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
     //         currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-    //         isSpeaking = true; // Lock speech processing
-        
+    //         isSpeaking = true;
+    
     //         try {
     //             for (let i = 0; i < textArray.length; i++) {
     //                 const text = textArray[i];
@@ -502,81 +499,61 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //                         }
     //                     );
     //                 });
-        
-    //                 // **Clear each sentence after it has been processed**
-    //                 console.log(`🗑️ Removing processed sentence from queue: "${sentenceQueue[0]}"`);
-    //                 sentenceQueue.shift(); // Removes the first processed sentence
     //             }
     //         } catch (error) {
     //             console.error("⚠️ Error during synthesis:", error);
-    //         } finally {
-    //             setTimeout(() => {
-    //                 isSpeaking = false; // Unlock speech processing AFTER audio duration
-    //                 console.log("🔓 isSpeaking set to FALSE after duration.");
-    //             }, 500); // Small buffer delay after speech ends
-        
-    //             if (currentSynthesizer) {
-    //                 currentSynthesizer.close();
-    //                 currentSynthesizer = null;
+    //         }
+    //     };
+    
+    //     // ✅ **Sentence Processing - Detecting End of Thought**
+    //     translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
+    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+    //             const interimTranslatedText = e.result.translations.get(tarLocale);
+    
+    //             if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
+    //                 console.log("🔄 Interim (Buffering):", interimTranslatedText);
+    
+    //                 currentSentenceBuffer = interimTranslatedText;
+    //                 lastRecognizingText = interimTranslatedText;
+    
+    //                 if (sentenceTimeout) clearTimeout(sentenceTimeout);
+    //                 sentenceTimeout = setTimeout(() => {
+    //                     console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
+    
+    //                     // ✅ Ensure the buffer has punctuation at the end
+    //                     if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
+    //                         currentSentenceBuffer += "."; // Append period if missing
+    //                     }
+    
+    //                     // ✅ Split sentences by punctuation while preserving punctuation
+    //                     const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
+    
+    //                     if (finalizedSentences) {
+    //                         finalizedSentences.forEach(sentence => {
+    //                             const trimmedSentence = sentence.trim();
+    //                             if (trimmedSentence) {
+    //                                 sentenceQueue.push(trimmedSentence);
+    //                             }
+    //                         });
+    //                     }
+    
+    //                     currentSentenceBuffer = "";
+    //                     lastRecognizingText = "";
+    
+    //                     // ✅ Ensure synthesis starts only when needed
+    //                     if (!isSpeaking) {
+    //                         processSynthesisQueue();
+    //                     }
+    //                 }, pauseThreshold);
     //             }
     //         }
     //     };
-
-    //         //     // ✅ Event: Recognizing (Interim Results)
-    //         translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
-    //             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-    //                 const interimTranslatedText = e.result.translations.get(tarLocale);
-        
-    //                 if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
-    //                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
-        
-    //                     currentSentenceBuffer = interimTranslatedText;
-    //                     lastRecognizingText = interimTranslatedText;
-        
-    //                     if (sentenceTimeout) clearTimeout(sentenceTimeout);
-    //                     sentenceTimeout = setTimeout(() => {
-    //                         console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
-        
-    //                         // ✅ Ensure the buffer has punctuation at the end
-    //                         if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
-    //                             currentSentenceBuffer += "."; // Append period if missing
-    //                         }
-        
-    //                         // ✅ Split sentences by punctuation while preserving punctuation
-    //                         const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
-        
-    //                         if (finalizedSentences) {
-    //                             finalizedSentences.forEach(sentence => {
-    //                                 const trimmedSentence = sentence.trim();
-    //                                 if (trimmedSentence) {
-    //                                     sentenceQueue.push(trimmedSentence);
-    //                                 }
-    //                             });
-    //                         }
-        
-    //                         currentSentenceBuffer = "";
-    //                         lastRecognizingText = "";
-        
-    //                         // ✅ Start synthesis queue only if not already speaking
-    //                         if (!isSpeaking) {
-    //                             processSynthesisQueue();
-    //                         }
-    //                     }, pauseThreshold);
-    //                 }
-    //             }
-    //         };
-        
     
     //     translator.recognized = () => {
     //         console.log("📢 Translator recognized event fired - Processing queue");
     //         if (!isSpeaking) {
     //             processSynthesisQueue();
     //         }
-    //     };
-    
-    //     // ✅ Event: Handle Cancellations
-    //     translator.canceled = (s, e) => {
-    //         console.error("❌ Translation canceled:", e.reason, "Error:", e.errorDetails);
     //     };
     
     //     // ✅ Start Continuous Recognition
@@ -590,16 +567,15 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     //     );
     
     //     return { translator };
-    // };
+    // };    
 
 
 
 
 
 
-
-
-
+    // This one is the closest to full prod we have
+        // It is reading almost live, not speaking over itself, and seems to not re-append sentenes, however, it might be cutting out some words
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
@@ -619,7 +595,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let isSpeaking = false; 
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
         let sentenceTimeout: NodeJS.Timeout | null = null;
-        const pauseThreshold = 1200; // Adjust for optimal flow
+        const pauseThreshold = 1100; // Adjust for optimal flow
     
         // ✅ **Continuous Processing Loop**
         const processSynthesisQueue = async () => {
@@ -687,41 +663,45 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     
         // ✅ **Sentence Processing - Detecting End of Thought**
+        let lastProcessedSentence = ""; // Track last spoken sentence
+
         translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
-    
+
                 if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
-    
+
                     currentSentenceBuffer = interimTranslatedText;
                     lastRecognizingText = interimTranslatedText;
-    
+
                     if (sentenceTimeout) clearTimeout(sentenceTimeout);
                     sentenceTimeout = setTimeout(() => {
                         console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
-    
-                        // ✅ Ensure the buffer has punctuation at the end
+
+                        // ✅ Ensure punctuation
                         if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
                             currentSentenceBuffer += "."; // Append period if missing
                         }
-    
-                        // ✅ Split sentences by punctuation while preserving punctuation
+
+                        // ✅ Split sentences while keeping punctuation
                         const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
-    
+
                         if (finalizedSentences) {
                             finalizedSentences.forEach(sentence => {
                                 const trimmedSentence = sentence.trim();
-                                if (trimmedSentence) {
+
+                                // ✅ Only push NEW sentences that have not already been spoken
+                                if (trimmedSentence && trimmedSentence !== lastProcessedSentence) {
                                     sentenceQueue.push(trimmedSentence);
+                                    lastProcessedSentence = trimmedSentence; // ✅ Update last processed sentence
                                 }
                             });
                         }
-    
+
                         currentSentenceBuffer = "";
                         lastRecognizingText = "";
-    
-                        // ✅ Ensure synthesis starts only when needed
+
                         if (!isSpeaking) {
                             processSynthesisQueue();
                         }
@@ -729,6 +709,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 }
             }
         };
+
     
         translator.recognized = () => {
             console.log("📢 Translator recognized event fired - Processing queue");
