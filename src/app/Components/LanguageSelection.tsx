@@ -461,6 +461,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
         const monitorSpeechLog = () => {
             setInterval(() => {
+                console.log("synthLog.length: ", synthLog.length);
+                console.log("lastProcessedIndex: ", lastProcessedIndex);
                 if (!isSpeaking && synthLog.length > lastProcessedIndex) {
                     console.log("🛠 Processing new speech log entries...");
         
@@ -475,7 +477,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     lastProcessedIndex = synthLog.length; // ✅ Update processed index
                     processSynthesisQueue(); // ✅ Trigger synthesis queue
                 }
-            }, 4000); // ✅ Check every 2 seconds
+            }, 2000); // ✅ Check every 2 seconds
         };
 
     
@@ -569,17 +571,17 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                             finalizedSentences.forEach(sentence => {
                                 const trimmedSentence = sentence.trim();
                                 if (trimmedSentence) {
-                                    speechLog.push(trimmedSentence); // ✅ Add to global speech log
-                                    synthLog = speechLog;
-                                    
+                                    speechLog.push(trimmedSentence); // ✅ Add to speech log
+                                    synthLog.push(trimmedSentence);  // ✅ Append to synthLog instead of replacing
                                 }
                             });
                         }
 
                         console.log("📜 Speech Log Updated:", speechLog);
-                        speechLog = [];
+                        speechLog = []; // ✅ Clear speechLog but NOT synthLog
                         currentSentenceBuffer = "";
                         lastRecognizingText = "";
+
 
                     }, pauseThreshold);
                 }
