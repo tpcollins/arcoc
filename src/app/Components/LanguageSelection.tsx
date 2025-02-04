@@ -643,30 +643,30 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
         let sentenceTimeout: NodeJS.Timeout | null = null;
         const pauseThreshold = 1100; // Adjust for optimal flow
-
+    
         let lastProcessedIndex = 0; // ✅ Track last processed sentence
-
+    
         const monitorSpeechLog = () => {
             setInterval(() => {
                 console.log("synthLog.length: ", synthLog.length);
                 console.log("lastProcessedIndex: ", lastProcessedIndex);
-        
+    
                 if (!isSpeaking && synthLog.length > lastProcessedIndex) {
                     console.log("🛠 Processing new speech log entries...");
-        
+    
                     for (let i = lastProcessedIndex; i < synthLog.length; i++) {
                         const sentence = synthLog[i];
+    
                         if (!sentenceQueue.includes(sentence)) {
                             sentenceQueue.push(sentence);
                         }
                     }
-        
+    
                     lastProcessedIndex = synthLog.length; // ✅ Update processed index
                     processSynthesisQueue(); // ✅ Trigger synthesis queue
                 }
-            }, 2000); // ✅ Check every 2 seconds
-        };        
-
+            }, 2000);
+        };
     
         // ✅ **Continuous Processing Loop**
         const processSynthesisQueue = async () => {
@@ -674,12 +674,12 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 return; // Don't re-trigger if already speaking
             }
     
-            isSpeaking = true; // Lock speaking
+            isSpeaking = true;
             console.log("🔄 Processing queue:", sentenceQueue);
     
             await synthesizeSpeech(sentenceQueue);
     
-            isSpeaking = false; // Unlock speaking
+            isSpeaking = false;
             sentenceQueue.length = 0; // Clears the array completely
             console.log("✅ Queue is empty, waiting for new sentences.");
         };
@@ -701,21 +701,21 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             try {
                 for (let i = 0; i < textArray.length; i++) {
                     const text = textArray[i];
-        
+    
                     await new Promise<void>((resolve, reject) => {
                         currentSynthesizer?.speakTextAsync(
                             text,
                             (result) => {
                                 if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
                                     console.log("✅ Synthesis complete:", text);
-        
-                                    const audioDuration = result.audioDuration / 10000; // Convert to milliseconds
+    
+                                    const audioDuration = result.audioDuration / 10000;
                                     console.log("🔊 Audio playback duration:", audioDuration, "ms");
-        
+    
                                     setTimeout(() => {
                                         console.log("⏳ Speech duration elapsed, unlocking queue.");
                                         resolve();
-                                    }, audioDuration); // Wait until the audio duration completes
+                                    }, audioDuration);
                                 } else {
                                     console.error("❌ Synthesis failed:", result.errorDetails);
                                     reject(new Error(result.errorDetails));
@@ -732,51 +732,45 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 console.error("⚠️ Error during synthesis:", error);
             }
         };
-
+    
         // ✅ Capture Recognized Text - Only Formatting, No Synthesis
         translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
-
+    
                 if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
                     currentSentenceBuffer = interimTranslatedText;
                     lastRecognizingText = interimTranslatedText;
-
+    
                     if (sentenceTimeout) clearTimeout(sentenceTimeout);
                     sentenceTimeout = setTimeout(() => {
                         console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
-
-                        // ✅ Ensure punctuation
+    
                         if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
                             currentSentenceBuffer += ".";
                         }
-
+    
                         // ✅ Store sentences in a log instead of synthesizing immediately
                         const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
                         if (finalizedSentences) {
                             finalizedSentences.forEach(sentence => {
                                 const trimmedSentence = sentence.trim();
-                                if (trimmedSentence) {
-                                    speechLog.push(trimmedSentence); // ✅ Add to speech log
-                                    synthLog.push(trimmedSentence);  // ✅ Append to synthLog instead of replacing
+                                if (trimmedSentence && !synthLog.includes(trimmedSentence)) {
+                                    speechLog.push(trimmedSentence);
                                 }
                             });
                         }
-
+    
                         console.log("📜 Speech Log Updated:", speechLog);
-                        // synthLog.push(...speechLog); // Append instead of replace
-                        // speechLog = []; // Now it's safe to clear the speech log
+                        synthLog.push(...speechLog); // ✅ Append instead of replace
+                        speechLog.length = 0; // ✅ Now it's safe to clear the speech log
                         currentSentenceBuffer = "";
                         lastRecognizingText = "";
-
-
                     }, pauseThreshold);
                 }
             }
         };
-
-
     
         translator.recognized = () => {
             console.log("📢 Translator recognized event fired - Processing queue");
@@ -786,8 +780,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     
         monitorSpeechLog();
-
-        // ✅ Start Continuous Recognition
+    
         translator.startContinuousRecognitionAsync(
             () => {
                 console.log("✅ Continuous recognition started.");
@@ -798,7 +791,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         );
     
         return { translator };
-    };  
+    };    
 
     return (
         <>
