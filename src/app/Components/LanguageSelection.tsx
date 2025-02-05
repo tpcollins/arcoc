@@ -853,7 +853,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let sentenceTimeout: NodeJS.Timeout | null = null;
         let batchTimeout: NodeJS.Timeout | null = null; // ✅ New timeout for batch processing
         let userSpeakingTimeout: NodeJS.Timeout | null = null;
-        const pauseThreshold = 2000; // Adjust for optimal flow
+        const pauseThreshold = 1600; // Adjust for optimal flow
     
         let lastProcessedIndex = 0; // ✅ Track last processed sentence
     
@@ -944,7 +944,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 const interimTranslatedText = e.result.translations.get(tarLocale);
-                isUserTalking = true; // ✅ User is actively speaking
+                isUserTalking = true;
         
                 if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
@@ -955,56 +955,62 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     sentenceTimeout = setTimeout(() => {
                         console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
         
-                        // ✅ Ensure punctuation at the end
+                        // ✅ Ensure punctuation
                         if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
                             currentSentenceBuffer += ".";
                         }
         
-                        // ✅ Split into individual sentences
+                        // ✅ Store sentences in speechLog
                         const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
-        
                         if (finalizedSentences) {
                             finalizedSentences.forEach(sentence => {
                                 const trimmedSentence = sentence.trim();
-        
-                                // ✅ **Prevent duplicates**
-                                if (trimmedSentence && (!speechLog.length || speechLog[speechLog.length - 1] !== trimmedSentence)) {
+                                if (trimmedSentence) {
                                     speechLog.push(trimmedSentence);
                                 }
                             });
                         }
         
                         console.log("📜 Speech Log Updated:", speechLog);
-        
-                        // ✅ **Send only 3 sentences when speechLog reaches 4**
-                        if (speechLog.length >= 4) {
-                            synthLog.push(...speechLog.splice(0, 3)); // ✅ Send first 3 sentences
-                            console.log("📤 Sending batch:", synthLog);
-                        }
-        
-                        // ✅ **Batch Timeout to Send Remaining Sentences**
-                        if (batchTimeout) clearTimeout(batchTimeout);
-                        batchTimeout = setTimeout(() => {
-                            if (!isUserTalking && speechLog.length > 0) {
-                                console.log("🕒 Timeout reached, sending remaining sentences.");
-                                synthLog.push(...speechLog.splice(0, speechLog.length)); // ✅ Send remaining sentences
-                            }
-                        }, 3000);
-        
+                        
                         currentSentenceBuffer = "";
                         lastRecognizingText = "";
-                    }, pauseThreshold);
+                    }, pauseThreshold); // ✅ This ONLY handles sentence formatting, NOT batch processing
                 }
             }
         
-            if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout); // ✅ Reset timeout on new speech
+            if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
         
-            // ✅ **Delayed reset for `isUserTalking`**
+            // ✅ Delayed reset for `isUserTalking`
             userSpeakingTimeout = setTimeout(() => {
                 isUserTalking = false;
                 console.log("⏳ No speech detected for 3 seconds, setting isUserTalking to false.");
-            }, 3000); // ✅ Waits 3 seconds before resetting
-        };        
+            }, 3000);
+        
+            // ✅ **Move Batch Processing OUTSIDE of pauseThreshold logic**
+            processBatchImmediately(); // ✅ Call this function directly whenever recognizing fires
+        };
+                   
+        const processBatchImmediately = () => {
+            console.log("pbi called");
+            console.log("pbi speechlog length: ", speechLog.length);
+            if (speechLog.length >= 4) {
+                synthLog.push(...speechLog.splice(0, 3)); // ✅ Process first three
+                console.log("📤 Sending batch:", synthLog);
+                processSynthesisQueue(); // **Trigger synthesis immediately**
+            }
+        
+            // ✅ Start batch timeout for leftovers
+            if (batchTimeout) clearTimeout(batchTimeout);
+            batchTimeout = setTimeout(() => {
+                if (!isUserTalking && speechLog.length > 0) {
+                    console.log("🕒 Timeout reached, sending remaining sentences.");
+                    synthLog.push(...speechLog.splice(0, speechLog.length)); // ✅ Send remaining
+                    processSynthesisQueue(); // **Trigger synthesis for leftovers**
+                }
+            }, 3000);
+        };
+        
         
     
         translator.recognized = () => {
