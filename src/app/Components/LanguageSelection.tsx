@@ -627,7 +627,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
     // usethisone2
-    // 
+    // this method is properly sending the sentences off and the timeout is sending off properly but we still need to fix the way that azure is appending sentences -
+    // - because we are still getting repeats
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
