@@ -841,10 +841,13 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
     // usethisone3
     // Issues:
-    // 1. Not reading sentences entirely unless we speak in 3 sentence intervals. Need to get that flushing function back up and working. I think -
-    // - it has something to do with our processes and intermediary variables. To some extent, I think we might not need to use as many anymore.
+    // Fixed issue (mostly) with translator not sending sentences off proplery/in the correct order. We need to, however, come up with a different way
+    // for sending off the finalized sentences because if we wait until the number if 4 then it never synthesizes those left in the speechLog.
 
-    // 2. Getting very very minor overlap. I think we still need to figure out how delay finalizedSentences because it is sending things off too quickly
+    // If we just set the number to 1 it is a little better than having no buffer but not by a lot. It still has a ton of issues with appending sentences 
+    // that do not need to be appended
+
+    // POTENTIAL FIX: attach a very short timeout (1-2) seconds but keep the number at 1 so that it gives it enough time to format
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
@@ -876,13 +879,13 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             console.log("🛠 monitorSpeechLog started");
         
             setInterval(() => {
-                console.log("🔄 monitorSpeechLog checking...");
+                // console.log("🔄 monitorSpeechLog checking...");
         
                 console.log("🔍 Checking synthLog length:", synthLog.length);
                 console.log("🔍 Last processed index:", lastProcessedIndex);
         
                 if (!isSpeaking && synthLog.length > lastProcessedIndex) {
-                    console.log("⚡ Processing new speech log entries...");
+                    // console.log("⚡ Processing new speech log entries...");
         
                     for (let i = lastProcessedIndex; i < synthLog.length; i++) {
                         const sentence = synthLog[i];
@@ -1019,20 +1022,23 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     const finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g);
                     console.log("Finalized Sentences before processing: ", finalizedSentences);
         
-                    if (finalizedSentences) {
-                        console.log("lpi finalized sentences: ", recogLPI);
-                        // ✅ Ensure we process only NEW sentences
+                    if (finalizedSentences && finalizedSentences.length >= 1) {
+                        // ✅ Only process sentences that come after the last processed index
                         let newSentences = finalizedSentences.slice(recogLPI);
-                        recogLPI = finalizedSentences.length; // ✅ Update last processed index
-                        console.log("lpi finalized sentences reset: ", recogLPI);
+                        if (newSentences.length > 0) {
+                            recogLPI = finalizedSentences.length; // ✅ Update lastProcessedIndex
+                        }else{
+                            recogLPI = 0;
+                        }
         
                         newSentences.forEach(sentence => {
                             speechLog.push(sentence);
                         });
         
                         console.log("📜 Updated Speech Log:", speechLog);
+                        console.log("recogLPI: ", recogLPI);
         
-                        // ✅ Process batch when speechLog reaches 4
+                        // ✅ If speechLog reaches 4 sentences, process batch
                         if (speechLog.length >= 4) {
                             console.log("✅ Speech log reached 4 sentences, triggering batch...");
                             synthLog.push(...speechLog.splice(0, 3)); // ✅ Send first 3
@@ -1053,7 +1059,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     processSynthesisQueue();
                 }
             }, 3000);
-        };        
+        };             
 
         translator.recognized = () => {
             console.log("📢 Translator recognized event fired - Processing queue");
