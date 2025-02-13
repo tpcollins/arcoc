@@ -840,11 +840,11 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
     // usethisone3
-    // I think this does it. We still need to test certain things
-    // - Will it work after there has been a cutoff for a period of time?
-    // Can we speak quickly?
-    // test Spanish
-    // etc.
+    // Issues:
+    // 1. Not reading sentences entirely unless we speak in 3 sentence intervals. Need to get that flushing function back up and working. I think -
+    // - it has something to do with our processes and intermediary variables. To some extent, I think we might not need to use as many anymore.
+
+    // 2. Getting very very minor overlap. I think we still need to figure out how delay finalizedSentences because it is sending things off too quickly
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
