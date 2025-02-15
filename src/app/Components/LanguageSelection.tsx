@@ -247,417 +247,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     }, [isPlaying, isDrpDwnDisabled]);
 
-    // usethisone
-    // Playground method with automated sentence sending
-    // const startContinuousTranslation = () => {
-    //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-    //         apiKey as string,
-    //         "eastus2"
-    //     );
-    
-    //     speechConfig.speechRecognitionLanguage = "en-US";
-    //     speechConfig.addTargetLanguage(tarLocale);
-    //     speechConfig.voiceName = shortName;
-    
-    //     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    //     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-    
-    //     let sentenceQueue: string[] = [];
-    //     let speechLog: string[] = [];
-    //     let synthLog: string[] = [];
-    //     let lastRecognizingText = "";
-    //     let currentSentenceBuffer = "";
-    //     let isSpeaking = false; 
-    //     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
-    //     let sentenceTimeout: NodeJS.Timeout | null = null;
-    //     let batchTimeout: NodeJS.Timeout | null = null; // NEW Timeout for speech log batch
-    //     const pauseThreshold = 1000;
-    //     const batchSize = 3; // Number of sentences to send at a time
-    //     let isUserTalking = false;
-    
-    //     let lastProcessedIndex = 0; 
-    
-    //     const monitorSpeechLog = () => {
-    //         setInterval(() => {
-    //             if (!isSpeaking && synthLog.length > lastProcessedIndex) {
-    //                 console.log("🛠 Processing new speech log entries...");
-    
-    //                 for (let i = lastProcessedIndex; i < synthLog.length; i++) {
-    //                     const sentence = synthLog[i];
-    //                     if (!sentenceQueue.includes(sentence)) {
-    //                         sentenceQueue.push(sentence);
-    //                     }
-    //                 }
-    
-    //                 lastProcessedIndex = synthLog.length; 
-    //                 processSynthesisQueue(); 
-    //             }
-    //         }, 2000);
-    //     };
-    
-    //     const processSynthesisQueue = async () => {
-    //         if (isSpeaking || sentenceQueue.length === 0) return;
-    
-    //         isSpeaking = true;
-    //         console.log("🔄 Processing queue:", sentenceQueue);
-    
-    //         await synthesizeSpeech(sentenceQueue);
-    
-    //         isSpeaking = false;
-    //         sentenceQueue.length = 0; 
-    //         console.log("✅ Queue is empty, waiting for new sentences.");
-    //     };
-    
-    //     const synthesizeSpeech = async (textArray: string[]) => {
-    //         if (currentSynthesizer) {
-    //             currentSynthesizer.close();
-    //             currentSynthesizer = null;
-    //         }
-    
-    //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
-    //         synthConfig.speechSynthesisVoiceName = shortName;
-    
-    //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-    //         currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-    //         isSpeaking = true;
-    
-    //         try {
-    //             for (let i = 0; i < textArray.length; i++) {
-    //                 const text = textArray[i];
-    
-    //                 await new Promise<void>((resolve, reject) => {
-    //                     currentSynthesizer?.speakTextAsync(
-    //                         text,
-    //                         (result) => {
-    //                             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-    //                                 console.log("✅ Synthesis complete:", text);
-    
-    //                                 const audioDuration = result.audioDuration / 10000;
-    //                                 console.log("🔊 Audio playback duration:", audioDuration, "ms");
-    
-    //                                 setTimeout(() => {
-    //                                     console.log("⏳ Speech duration elapsed, unlocking queue.");
-    //                                     resolve();
-    //                                 }, audioDuration);
-    //                             } else {
-    //                                 console.error("❌ Synthesis failed:", result.errorDetails);
-    //                                 reject(new Error(result.errorDetails));
-    //                             }
-    //                         },
-    //                         (error) => {
-    //                             console.error("⚠️ Error during speech synthesis:", error);
-    //                             reject(error);
-    //                         }
-    //                     );
-    //                 });
-    //             }
-    //         } catch (error) {
-    //             console.error("⚠️ Error during synthesis:", error);
-    //         }
-    //     };
-    
-    //     translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
-    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-    //             const interimTranslatedText = e.result.translations.get(tarLocale);
-    //             isUserTalking = true;
-    
-    //             if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
-    //                 console.log("🔄 Interim (Buffering):", interimTranslatedText);
-    //                 currentSentenceBuffer = interimTranslatedText;
-    //                 lastRecognizingText = interimTranslatedText;
-    
-    //                 if (sentenceTimeout) clearTimeout(sentenceTimeout);
-    //                 sentenceTimeout = setTimeout(() => {
-    //                     console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
-    
-    //                     if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
-    //                         currentSentenceBuffer += ".";
-    //                     }
-    
-    //                     const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
-    //                     if (finalizedSentences) {
-    //                         finalizedSentences.forEach(sentence => {
-    //                             const trimmedSentence = sentence.trim();
-    //                             if (trimmedSentence) {
-    //                                 speechLog.push(trimmedSentence);
-    //                             }
-    //                         });
-    //                     }
-    
-    //                     console.log("📜 Speech Log Updated:", speechLog);
-    
-    //                     // ✅ Send the first `batchSize` sentences if enough have accumulated
-    //                     if (speechLog.length >= batchSize) {
-    //                         synthLog.push(...speechLog.splice(0, batchSize));
-    //                         console.log("🚀 Sending batch to synthLog:", synthLog);
-    //                     }
-    
-    //                     // ✅ If there's a pause for 3 seconds, send remaining sentences
-    //                     if (batchTimeout) clearTimeout(batchTimeout);
-    //                     batchTimeout = setTimeout(() => {
-    //                         if (speechLog.length > 0 && !isUserTalking) {
-    //                             console.log("isUserTalking: ,", isUserTalking);
-    //                             console.log("⏳ Timeout reached, sending remaining sentences.");
-    //                             synthLog.push(...speechLog.splice(0, speechLog.length));
-    //                         }
-    //                     }, 3000);
-    
-    //                     currentSentenceBuffer = "";
-    //                     lastRecognizingText = "";
-    //                 }, pauseThreshold);
-    //             }
-    //         }else{
-    //             isUserTalking = false;
-    //         }
-    //     };
-    
-    //     translator.recognized = () => {
-    //         console.log("📢 Translator recognized event fired - Processing queue");
-    //         if (!isSpeaking) {
-    //             processSynthesisQueue();
-    //         }
-    //     };
-    
-    //     monitorSpeechLog();
-    
-    //     translator.startContinuousRecognitionAsync(
-    //         () => {
-    //             console.log("✅ Continuous recognition started.");
-    //         },
-    //         (error) => {
-    //             console.error("❌ Error starting continuous recognition:", error);
-    //         }
-    //     );
-    
-    //     return { translator };
-    // };    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // usethisone2
-    // By setting the pauseThreshold to 4 seconds the interim log translates the sentences perfectly (at least so far).. I am going to try and replicate -
-    // - the recognized translator now (which it is basically already doing) and send the sentences off from the interim log to be processed once it hits -
-    // - 4 sentences.
-
-    // It should send the first 3 off at this point and then keep the existing functionality. Since this method has everything we need I am going to -
-    // - create a playground method underneath it called usethisone3
-    // const startContinuousTranslation = () => {
-    //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-    //         apiKey as string,
-    //         "eastus2"
-    //     );
-    
-    //     speechConfig.speechRecognitionLanguage = "en-US";
-    //     speechConfig.addTargetLanguage(tarLocale);
-    //     speechConfig.voiceName = shortName;
-    
-    //     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    //     translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
-    
-    //     let sentenceQueue: string[] = []; // Store fully formed sentences
-    //     let speechLog: string[] = [];
-    //     let synthLog: string[] = [];
-    //     let lastRecognizingText = ""; // Track interim sentence progress
-    //     let currentSentenceBuffer = ""; // Temporary storage for words
-    //     let isSpeaking = false;
-    //     let isUserTalking = false; // ✅ Tracks if user is actively speaking
-    //     let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
-    //     let sentenceTimeout: NodeJS.Timeout | null = null;
-    //     let batchTimeout: NodeJS.Timeout | null = null; // ✅ New timeout for batch processing
-    //     let userSpeakingTimeout: NodeJS.Timeout | null = null;
-    //     const pauseThreshold = 4000; // Adjust for optimal flow
-    
-    //     let lastProcessedIndex = 0; // ✅ Track last processed sentence
-    
-    //     const monitorSpeechLog = () => {
-    //         setInterval(() => {
-    //             if (!isSpeaking && synthLog.length > lastProcessedIndex) {
-    //                 console.log("🛠 Processing new speech log entries...");
-    
-    //                 // ✅ Process only NEW sentences
-    //                 for (let i = lastProcessedIndex; i < synthLog.length; i++) {
-    //                     const sentence = synthLog[i];
-    //                     if (!sentenceQueue.includes(sentence)) {
-    //                         sentenceQueue.push(sentence);
-    //                     }
-    //                 }
-    
-    //                 lastProcessedIndex = synthLog.length; // ✅ Update processed index
-    //                 processSynthesisQueue(); // ✅ Trigger synthesis queue
-    //             }
-    //         }, 2000); // ✅ Check every 2 seconds
-    //     };
-    
-    //     // ✅ **Continuous Processing Loop**
-    //     const processSynthesisQueue = async () => {
-    //         if (isSpeaking || sentenceQueue.length === 0) {
-    //             return; // Don't re-trigger if already speaking
-    //         }
-    
-    //         isSpeaking = true; // Lock speaking
-    //         console.log("🔄 Processing queue:", sentenceQueue);
-    
-    //         await synthesizeSpeech(sentenceQueue);
-    
-    //         isSpeaking = false; // Unlock speaking
-    //         sentenceQueue.length = 0; // Clears the array completely
-    //         console.log("✅ Queue is empty, waiting for new sentences.");
-    //     };
-    
-    //     // ✅ **Optimized Synthesis Method**
-    //     const synthesizeSpeech = async (textArray: string[]) => {
-    //         if (currentSynthesizer) {
-    //             currentSynthesizer.close();
-    //             currentSynthesizer = null;
-    //         }
-    
-    //         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey as string, "eastus2");
-    //         synthConfig.speechSynthesisVoiceName = shortName;
-    
-    //         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-    //         currentSynthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
-    //         isSpeaking = true;
-    
-    //         try {
-    //             for (let i = 0; i < textArray.length; i++) {
-    //                 const text = textArray[i];
-    
-    //                 await new Promise<void>((resolve, reject) => {
-    //                     currentSynthesizer?.speakTextAsync(
-    //                         text,
-    //                         (result) => {
-    //                             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-    //                                 console.log("✅ Synthesis complete:", text);
-    
-    //                                 const audioDuration = result.audioDuration / 10000; // Convert to milliseconds
-    //                                 console.log("🔊 Audio playback duration:", audioDuration, "ms");
-    
-    //                                 setTimeout(() => {
-    //                                     console.log("⏳ Speech duration elapsed, unlocking queue.");
-    //                                     resolve();
-    //                                 }, audioDuration); // Wait until the audio duration completes
-    //                             } else {
-    //                                 console.error("❌ Synthesis failed:", result.errorDetails);
-    //                                 reject(new Error(result.errorDetails));
-    //                             }
-    //                         },
-    //                         (error) => {
-    //                             console.error("⚠️ Error during speech synthesis:", error);
-    //                             reject(error);
-    //                         }
-    //                     );
-    //                 });
-    //             }
-    //         } catch (error) {
-    //             console.error("⚠️ Error during synthesis:", error);
-    //         }
-    //     };
-    
-    //     // ✅ Capture Recognized Text - Only Formatting, No Synthesis
-    //     translator.recognizing = (s: SpeechSDK.TranslationRecognizer, e: SpeechSDK.TranslationRecognitionEventArgs) => {
-    //         if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-    //             const interimTranslatedText = e.result.translations.get(tarLocale);
-    //             isUserTalking = true;
-    
-    //             if (interimTranslatedText && interimTranslatedText !== lastRecognizingText) {
-    //                 console.log("🔄 Interim (Buffering):", interimTranslatedText);
-    //                 currentSentenceBuffer = interimTranslatedText;
-    //                 lastRecognizingText = interimTranslatedText;
-    
-    //                 if (sentenceTimeout) clearTimeout(sentenceTimeout);
-    //                 sentenceTimeout = setTimeout(() => {
-    //                     console.log("🛑 Pause detected, finalizing:", currentSentenceBuffer);
-    
-    //                     // ✅ Ensure punctuation
-    //                     if (!/[.!?]$/.test(currentSentenceBuffer.trim())) {
-    //                         currentSentenceBuffer += ".";
-    //                     }
-    
-    //                     // ✅ Store sentences in a log instead of synthesizing immediately
-    //                     const finalizedSentences = currentSentenceBuffer.match(/[^.!?]+[.!?]/g);
-    //                     if (finalizedSentences) {
-    //                         finalizedSentences.forEach(sentence => {
-    //                             const trimmedSentence = sentence.trim();
-    //                             if (trimmedSentence) {
-    //                                 speechLog.push(trimmedSentence); // ✅ Add to speech log
-    //                             }
-    //                         });
-    //                     }
-    
-    //                     console.log("📜 Speech Log Updated:", speechLog);
-    
-    //                     // ✅ **Send only 3 sentences when speechLog reaches 4**
-    //                     if (speechLog.length >= 4) {
-    //                         synthLog.push(...speechLog.splice(0, 3)); // ✅ Send first 3 sentences
-    //                         console.log("📤 Sending batch:", synthLog);
-    //                     }
-    
-    //                     // ✅ Start batch timeout for remaining sentences
-    //                     if (batchTimeout) clearTimeout(batchTimeout);
-    //                     batchTimeout = setTimeout(() => {
-    //                         if (!isUserTalking && speechLog.length > 0) {
-    //                             console.log("🕒 Timeout reached, sending remaining sentences.");
-    //                             synthLog.push(...speechLog.splice(0, speechLog.length)); // ✅ Send remaining sentences
-    //                         }
-    //                     }, 3000);
-    
-    //                     currentSentenceBuffer = "";
-    //                     lastRecognizingText = "";
-    //                 }, pauseThreshold);
-    //             }
-    //         }
-    //         if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout); // ✅ Reset timeout on new speech
-            
-    //         if (batchTimeout) clearTimeout(batchTimeout);
-    //         batchTimeout = setTimeout(() => {
-    //             if (!isUserTalking && speechLog.length > 0) {
-    //                 console.log("🕒 Timeout reached, sending remaining sentences.");
-    //                 synthLog.push(...speechLog.splice(0, speechLog.length)); // ✅ Send remaining sentences
-    //             }
-    //         }, 3000);
-
-    //         // ✅ Delayed reset for `isUserTalking`
-    //         userSpeakingTimeout = setTimeout(() => {
-    //             isUserTalking = false;
-    //             console.log("⏳ No speech detected for 3 seconds, setting isUserTalking to false.");
-    //         }, 3000); // ✅ Waits 3 seconds before resetting
-    //     };
-    
-    //     translator.recognized = () => {
-    //         console.log("📢 Translator recognized event fired - Processing queue");
-    //         if (!isSpeaking) {
-    //             processSynthesisQueue();
-    //         }
-    //     };
-    
-    //     monitorSpeechLog();
-    
-    //     // ✅ Start Continuous Recognition
-    //     translator.startContinuousRecognitionAsync(
-    //         () => {
-    //             console.log("✅ Continuous recognition started.");
-    //         },
-    //         (error) => {
-    //             console.error("❌ Error starting continuous recognition:", error);
-    //         }
-    //     );
-    
-    //     return { translator };
-    // };
-
-
-
     // usethisone3
     // Issues:
     // Mostly working, sentences are sending off properly. Issue is just with the last sentence not recieving punctuation. Since this method seems -
@@ -895,7 +484,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             setInterval(() => {
                 // console.log("🔄 monitorSpeechLog checking...");
         
-                // console.log("🔍 Checking synthLog length:", synthLog.length);
+                // console.log("🔍 Checking speechLog length before send off:", synthLog.length);
                 // console.log("🔍 Last processed index:", lastProcessedIndex);
         
                 if (speechLog.length > lastProcessedIndex) {
@@ -907,8 +496,12 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                             sentenceQueue.push(sentence);
                         }
                     }
-        
+                    
+                    
                     lastProcessedIndex = speechLog.length; // ✅ Update processed index
+                    // console.log(" ");
+                    // console.log("🔍 Checking speechLog length after send off:", synthLog.length);
+                    console.log("🔍 Last processed index:", lastProcessedIndex);
                     processSynthesisQueue(); // ✅ Trigger synthesis queue
                 }
             }, 2000); // ✅ Check every 2 seconds
@@ -980,65 +573,217 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             }
         };  
 
+        // This one does not use finalizedSentencesCharLength so it is sending the entire interim log but it is not clogging (unless we remove timeout)
         let recogLPI = 0;
         let recogTimeout: NodeJS.Timeout | null = null;
+        let lastInterimText = ""; // ✅ Store last interim recognized text
+
         translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 let interimTranslatedText = e.result.translations.get(tarLocale);
                 isUserTalking = true;
-        
+
                 if (interimTranslatedText) {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
                     console.log("ITT Length: ", interimTranslatedText.length);
-        
+                    
+                    lastInterimText = interimTranslatedText; // ✅ Save latest text (even if it lacks punctuation)
+
                     let finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
                     console.log("Finalized Sentences before processing: ", finalizedSentences);
-        
-                    if (finalizedSentences.length > 0) {
-                        // ✅ Clear previous timeout to reset the delay
-                        if (recogTimeout) clearTimeout(recogTimeout);
-        
-                        recogTimeout = setTimeout(() => {
-                            let newSentences = finalizedSentences.slice(recogLPI);
-                            if (newSentences.length > 0) {
-                                recogLPI = finalizedSentences.length; // ✅ Update lastProcessedIndex
-        
-                                newSentences.forEach(sentence => {
-                                    let trimmedSentence = sentence.trim();
-        
-                                    // ✅ Ensure punctuation at the end of the last sentence
-                                    if (!/[.!?]$/.test(trimmedSentence)) {
-                                        trimmedSentence += ".";
-                                    }
-        
-                                    speechLog.push(trimmedSentence);
-                                });
-                            } else {
-                                recogLPI = 0;
-                            }
-        
+
+                    if (recogTimeout) clearTimeout(recogTimeout);
+                    recogTimeout = setTimeout(() => {
+                        let newSentences = finalizedSentences.slice(recogLPI);
+                        if (newSentences.length > 0) {
+                            recogLPI = finalizedSentences.length; // ✅ Update lastProcessedIndex
+
+                            newSentences.forEach(sentence => {
+                                speechLog.push(sentence.trim());
+                            });
+
                             console.log("📜 Updated Speech Log:", speechLog);
                             console.log("recogLPI: ", recogLPI);
-        
-                            // ✅ If speechLog reaches threshold, process batch
-                            if (speechLog.length >= 1) {
-                                console.log("✅ Speech log reached threshold, triggering batch...");
-                                processSynthesisQueue();
-                            }
-                        }, 1000); // ✅ Waits 1 second before processing
-                    }
+                        }
+
+                        // ✅ If speechLog reaches threshold, process batch
+                        if (speechLog.length >= 1) {
+                            console.log("✅ Speech log reached threshold, triggering batch...");
+                            processSynthesisQueue();
+                        }
+                    }, 1000); // ✅ Small delay before processing
                 }
             }
-        
+
             if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
             userSpeakingTimeout = setTimeout(() => {
                 isUserTalking = false;
-                console.log("⏳ No speech detected for 3 seconds, sending remaining sentences...");
+                console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
+
+                if (lastInterimText && !/[.!?]$/.test(lastInterimText.trim())) {
+                    lastInterimText += "."; // ✅ Ensure punctuation
+                    console.log("✏️ Added punctuation to last sentence:", lastInterimText);
+                    speechLog.push(lastInterimText.trim());
+                }
+
                 if (speechLog.length > 0) {
+                    console.log("📢 Processing final batch...");
                     processSynthesisQueue();
                 }
             }, 3000);
-        };             
+        };
+
+        // This one does use finalizedSentencesCharLength and does not send the entire interimlog but it is clogging
+        // let recogLPI = 0;
+        // let recogTimeout: NodeJS.Timeout | null = null;
+        // let lastFinalSentence = ""; // ✅ Track last finalized sentence to avoid duplicates
+        // let finalSentencesCharLength = 0; // ✅ Track character count of finalized sentences
+        // let interimTranslatedText = ""
+
+        // translator.recognizing = (s, e) => {
+        //     if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+        //         interimTranslatedText = e.result.translations.get(tarLocale);
+        //         isUserTalking = true;
+
+        //         if (interimTranslatedText) {
+        //             console.log("🔄 Interim (Buffering):", interimTranslatedText);
+
+        //             let finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
+        //             console.log("Finalized Sentences before processing: ", finalizedSentences);
+
+        //             if (recogTimeout) clearTimeout(recogTimeout);
+        //             recogTimeout = setTimeout(() => {
+        //                 let newSentences = finalizedSentences.slice(recogLPI);
+        //                 if (newSentences.length > 0) {
+        //                     recogLPI = finalizedSentences.length; // ✅ Update lastProcessedIndex
+        //                     finalSentencesCharLength = finalizedSentences.join("").length; // ✅ Update char length
+
+        //                     newSentences.forEach(sentence => {
+        //                         let trimmedSentence = sentence.trim();
+
+        //                         // ✅ Ensure we don't push duplicates
+        //                         if (trimmedSentence !== lastFinalSentence) {
+        //                             speechLog.push(trimmedSentence);
+        //                             lastFinalSentence = trimmedSentence; // ✅ Store last pushed sentence
+        //                         }
+        //                     });
+
+        //                     console.log("📜 Updated Speech Log:", speechLog);
+        //                     console.log("recogLPI: ", recogLPI);
+        //                 }
+
+        //                 // ✅ If speechLog reaches threshold, process batch
+        //                 if (speechLog.length >= 1) {
+        //                     console.log("✅ Speech log reached threshold, triggering batch...");
+        //                     processSynthesisQueue();
+        //                 }
+        //             }, 1000); // ✅ Small delay before processing
+        //         }
+        //     }
+
+        //     // ✅ Handle case where last sentence is missing punctuation
+        //     if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
+        //     userSpeakingTimeout = setTimeout(() => {
+        //         isUserTalking = false;
+        //         console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
+
+        //         console.log("ITT Length: ", interimTranslatedText.length);
+        //         console.log("finalSentencesCharLength: ", finalSentencesCharLength);
+
+        //         if (interimTranslatedText.length > finalSentencesCharLength) {
+        //             console.log("⚠️ Detected unfinished sentence. Adding punctuation...");
+
+        //             let missingText = interimTranslatedText.substring(finalSentencesCharLength).trim();
+        //             if (!/[.!?]$/.test(missingText)) {
+        //                 missingText += "."; // ✅ Append missing punctuation
+        //             }
+
+        //             console.log("✏️ Added punctuation to last sentence:", missingText);
+        //             speechLog.push(missingText);
+        //             recogLPI = speechLog.length;
+        //         }
+
+        //         if (speechLog.length > 0) {
+        //             console.log("📢 Processing final batch...");
+        //             processSynthesisQueue();
+        //         }
+        //     }, 3000);
+        // };
+
+
+        // In this one I am attempting to islote the last sentenc with a puncCount variable
+        // let recogLPI = 0;
+        // let recogTimeout: NodeJS.Timeout | null = null;
+        // let lastInterimText = ""; // ✅ Store last interim recognized text
+        // let puncCount = 0; // ✅ Track number of punctuated sentences
+        // let finalizedSentences: string[] = [];
+
+        // translator.recognizing = (s, e) => {
+        //     if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
+        //         let interimTranslatedText = e.result.translations.get(tarLocale);
+        //         isUserTalking = true;
+
+        //         if (interimTranslatedText) {
+        //             console.log("🔄 Interim (Buffering):", interimTranslatedText);
+        //             console.log("ITT Length: ", interimTranslatedText.length);
+
+        //             lastInterimText = interimTranslatedText; // ✅ Save latest text
+
+        //             finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
+        //             console.log("Finalized Sentences before processing: ", finalizedSentences);
+
+        //             if (recogTimeout) clearTimeout(recogTimeout);
+        //             recogTimeout = setTimeout(() => {
+        //                 let newSentences = finalizedSentences.slice(recogLPI);
+        //                 if (newSentences.length > 0) {
+        //                     recogLPI = finalizedSentences.length; // ✅ Update lastProcessedIndex
+
+        //                     newSentences.forEach(sentence => {
+        //                         speechLog.push(sentence.trim());
+        //                     });
+
+        //                     console.log("📜 Updated Speech Log:", speechLog);
+        //                     console.log("recogLPI: ", recogLPI);
+        //                 }
+
+        //                 // ✅ If speechLog reaches threshold, process batch
+        //                 if (speechLog.length >= 1) {
+        //                     console.log("✅ Speech log reached threshold, triggering batch...");
+        //                     processSynthesisQueue();
+        //                 }
+        //             }, 1000); // ✅ Small delay before processing
+        //         }
+        //     }
+
+        //     if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
+        //     userSpeakingTimeout = setTimeout(() => {
+        //         isUserTalking = false;
+        //         console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
+
+        //         if (lastInterimText && !/[.!?]$/.test(lastInterimText.trim())) {
+        //             lastInterimText += "."; // ✅ Ensure punctuation
+        //             console.log("✏️ Added punctuation to last sentence:", lastInterimText);
+
+        //             // ✅ **Count the number of sentences after punctuation is added**
+        //             let sentences = lastInterimText.match(/[^.!?]+[.!?]/g) || [];
+        //             let lastSentence = sentences.length > puncCount ? sentences[sentences.length - 1].trim() : "";
+
+        //             if (lastSentence) {
+        //                 console.log("✅ Extracted last sentence:", lastSentence);
+        //                 speechLog.push(lastSentence); // ✅ Only push the last updated sentence
+        //                 finalizedSentences.push(lastSentence);
+        //                 puncCount = sentences.length; // ✅ Update punctuation count
+        //             }
+        //         }
+
+        //         recogLPI = finalizedSentences.length;
+
+        //         if (speechLog.length > 0) {
+        //             console.log("📢 Processing final batch...");
+        //             processSynthesisQueue();
+        //         }
+        //     }, 3000);
+        // };
 
         translator.recognized = () => {
             console.log("📢 Translator recognized event fired - Processing queue");
