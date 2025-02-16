@@ -813,7 +813,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 interimTranslatedText = ""; // ✅ Reset interim log
                 finalizedSentences = []; // ✅ Reset finalized sentences array
         
-            }, 3000);
+            }, 1500);
         };        
 
         translator.recognized = () => {
