@@ -1,7 +1,15 @@
 /*
 
 next steps: 
-- use startContinuosTranslation that is marked with: usethisone
+- use startContinuosTranslation that is marked with: usethisone4
+
+- Translator is having issues. If we move timeout punctuation method inside of the interim text loop it resends the entire speechlog when it synthesizes.
+If we put it outside, it turns the translator off while it adds punctuation (which takes forever for some reason) and then it leaves out words on the next
+synthesization.
+
+** potential solutions:
+    1. Track both the interimtranslatedtext, finalizedSentences, speechlog, and current sentence being processed ONLY upon synthesization to isolate issue
+    2. Figure out why our loops are not working because they should ensure that every sentence is read properly once after the other
 
 
 */
@@ -777,7 +785,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         }
                     }, 1000); // ✅ Small delay before processing
                 }
-                
                 if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
                     userSpeakingTimeout = setTimeout(() => {
                         isUserTalking = false;
