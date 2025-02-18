@@ -9,6 +9,10 @@ Might need to:
     2. Try relying on just finalizedSentences 
     3. Try adjusting timer
 
+
+
+    - Adjusting timer worked a lot better. might just need to take it off entirely
+
 */
 
 
@@ -998,7 +1002,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         
                             console.log("📜 Updated Speech Log:", speechLog);
                         }
-                    }, 1000); // ✅ Small delay before processing
+                    }, 500); // ✅ Small delay before processing
                 }
             }
 
