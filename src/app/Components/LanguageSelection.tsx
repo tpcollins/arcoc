@@ -1014,12 +1014,12 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         }
         
                         processSynthesisQueue();
-                    }, 500);
+                    }, 0);
                 }
         
-                if (!isUserTalking) {
-                    recogLPI = 0;
-                }
+                // if (!isUserTalking) {
+                //     recogLPI = 0;
+                // }
             }
 
             if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
