@@ -861,7 +861,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
     // usethisone3
-    // Has all the different recognizer variations
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
@@ -966,11 +965,11 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
         // Background processing loop
         setInterval(() => {
-            if (!isSpeaking && speechLog.length > 0) {
+            if (!isSpeaking && speechLog.length > lastProcessedIndex) {
                 console.log("⏳ Background synthesis triggered...");
                 processSynthesisQueue();
             }
-        }, 500);  // Runs every 500ms
+        }, 1500);  // Runs every 1.5 seconds        
 
 
         // This is the same one as above but it sets recogLPI to 0
@@ -983,18 +982,21 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
         
                     finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
-                    console.log("Finalized Sentences before processing: ", finalizedSentences);
+                    console.log("Finalized Sentences before processing:", finalizedSentences);
         
                     if (recogTimeout) clearTimeout(recogTimeout);
                     recogTimeout = setTimeout(() => {
                         let newSentences = finalizedSentences.slice(recogLPI);
+                        
                         if (newSentences.length > 0) {
                             recogLPI = finalizedSentences.length; // ✅ Update lastProcessedIndex
-                            finalSentencesCharLength = finalizedSentences.join("").length; // ✅ Update char length
-        
+                            finalSentencesCharLength = finalizedSentences.join("").length; // ✅ Update char count
+                            
                             newSentences.forEach(sentence => {
                                 let trimmedSentence = sentence.trim();
-                                if (trimmedSentence !== lastFinalSentence) {
+        
+                                // ✅ Avoid duplicate sentences in speechLog
+                                if (!speechLog.includes(trimmedSentence)) {
                                     speechLog.push(trimmedSentence);
                                     lastFinalSentence = trimmedSentence; // ✅ Store last pushed sentence
                                 }
@@ -1004,44 +1006,40 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         }
                     }, 500); // ✅ Small delay before processing
                 }
-            }
+            }  
 
             if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
-                userSpeakingTimeout = setTimeout(() => {
+            userSpeakingTimeout = setTimeout(() => {
+                if (isUserTalking) return; // ✅ Prevent overwriting if new speech is detected
+            
                 isUserTalking = false;
                 console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
-        
-                console.log("ITT Length: ", interimTranslatedText.length);
-                console.log("finalSentencesCharLength: ", finalSentencesCharLength);
-        
+            
                 if (interimTranslatedText.length > finalSentencesCharLength) {
                     console.log("⚠️ Detected unfinished sentence. Adding punctuation...");
-        
+            
                     let missingText = interimTranslatedText.substring(finalSentencesCharLength).trim();
                     if (!/[.!?]$/.test(missingText)) {
                         missingText += "."; // ✅ Append missing punctuation
                     }
-        
-                    console.log("✏️ Added punctuation to last sentence:", missingText);
-                    speechLog.push(missingText);
-                    finalizedSentences.push(missingText); // ✅ Add to finalized sentences
-                    recogLPI = finalizedSentences.length; // ✅ Ensure next recog cycle skips it
-                    finalSentencesCharLength = interimTranslatedText.length; // ✅ Reset char count
-                    processSynthesisQueue();
+            
+                    if (!speechLog.includes(missingText)) {
+                        console.log("✏️ Added punctuation to last sentence:", missingText);
+                        speechLog.push(missingText);
+                        finalizedSentences.push(missingText); // ✅ Add to finalized sentences
+                        recogLPI = finalizedSentences.length; // ✅ Ensure next recog cycle skips it
+                        finalSentencesCharLength = interimTranslatedText.length; // ✅ Reset char count
+                        processSynthesisQueue();
+                    }
                 }
-        
-                // if (speechLog.length > 0) {
-                //     console.log("📢 Processing final batch...");
-                //     processSynthesisQueue();
-                // }
-        
-                // ✅ Reset recogLPI to avoid stale indices
+            
+                // ✅ Reset recogLPI only after processing finishes
                 recogLPI = 0;
                 finalSentencesCharLength = 0;
                 interimTranslatedText = ""; // ✅ Reset interim log
                 finalizedSentences = []; // ✅ Reset finalized sentences array
-    
-            }, 1500);
+            
+            }, 4000);  // Increased to 4s to better avoid cut-offs
         };       
 
         translator.recognized = () => {
