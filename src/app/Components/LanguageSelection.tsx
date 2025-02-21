@@ -2,9 +2,8 @@
 
 Current setup: 
 - use usethisone4
-- see screenshot in ms paint. commented out where we were restarting the translator because that seemed unecessary. It is something with the recogLPI.
-It actually does seem to be tracking the ITT and FS Char Length (at least in that snippet) but it is having issues with sending it at the right index.
-At this point I am unsure if that is because of the punctuation method or the processing index or both. 
+- I think I got the recogLPI resetting correctly and the issues with the differing lengths fixed. We need to do some more testing but at least
+in our most previous iteration it was working well
 
 */
 
@@ -1094,26 +1093,20 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
         translator = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig);
     
-        let sentenceQueue: string[] = []; // Store fully formed sentences
         let speechLog: string[] = [];
-        let synthLog: string[] = []; // ✅ Track what has been synthesized
         let synthesizedIndex = 0; // ✅ New variable to track synthesized sentences
-        let lastRecognizingText = ""; // Track interim sentence progress
-        let currentSentenceBuffer = ""; // Temporary storage for words
         let isSpeaking = false;
         let isUserTalking = false;
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
-        let sentenceTimeout: NodeJS.Timeout | null = null;
-        let batchTimeout: NodeJS.Timeout | null = null;
         let userSpeakingTimeout: NodeJS.Timeout | null = null;
         
         let recogLPI = 0;
         let recogTimeout: NodeJS.Timeout | null = null;
-        let lastFinalSentence = "";
         let finalSentencesCharLength = 0;
         let interimTranslatedText = "";
         let finalizedSentences: string[] = [];
         let lastSentencePendingPunctuation = "";
+        let fSentCharLenReset = false;
         
         // ✅ **Force Synthesis for Each Sentence**
         const processSynthesisQueue = async () => {
@@ -1183,6 +1176,12 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
                     finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
                     console.log("Finalized Sentences before processing:", finalizedSentences);
+
+                    if (fSentCharLenReset){
+                        finalSentencesCharLength = interimTranslatedText.length;
+                        recogLPI = 0;
+                        fSentCharLenReset = false;
+                    }
         
                     if (recogTimeout) clearTimeout(recogTimeout);
                     recogTimeout = setTimeout(() => {
@@ -1217,6 +1216,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 console.log("finalSentencesCharLength:", finalSentencesCharLength);
         
                 if (interimTranslatedText.length > finalSentencesCharLength) {
+                    fSentCharLenReset = true;
                     console.log("⚠️ Detected unfinished sentence. Adding punctuation...");
                     let missingText = interimTranslatedText.substring(finalSentencesCharLength).trim();
                     if (!/[.!?]$/.test(missingText)) {
@@ -1229,8 +1229,9 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     }
         
                     finalizedSentences.push(missingText);
-                    recogLPI = finalizedSentences.length;
                     finalSentencesCharLength = interimTranslatedText.length;
+                    // recogLPI = finalizedSentences.length;
+                    // console.log("recog LPI after reset in UST: ", recogLPI);
                     processSynthesisQueue();
                 }
         
