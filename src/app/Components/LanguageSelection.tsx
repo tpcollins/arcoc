@@ -2,8 +2,11 @@
 
 Current setup: 
 - use usethisone5
-- I think I got the recogLPI resetting correctly and the issues with the differing lengths fixed. We need to do some more testing but at least
-in our most previous iteration it was working well
+- It is was working fine but tried to do the AI text to speech and it sped it up (not sure why) this time around. The way we are doing it, it simply 
+can not process the sentences fast enough for it to work. We need to figure something else out. I think we might need to keep synthLog again.
+
+I am not sure how we will make sure the sentences do not get pushed all crazy but if we could keep the synthlog we could record what has already been 
+synthesized and somehow figure something out for adding the period at the end. I don't even know 
 
 */
 
@@ -1099,6 +1102,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let isUserTalking = false;
         let currentSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
         let userSpeakingTimeout: NodeJS.Timeout | null = null;
+
+        let speechLogTimeout: NodeJS.Timeout | null = null; // This is a temporary variable so we can check the speech log after it is done speaking
         
         let recogLPI = 0;
         let recogTimeout: NodeJS.Timeout | null = null;
@@ -1207,40 +1212,81 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                         processSynthesisQueue(); // ✅ Immediately process synthesis
                     }, 0);
                 }
+
+                if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
+                userSpeakingTimeout = setTimeout(() => {
+                    console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
+                    console.log("ITT Length:", interimTranslatedText.length);
+                    console.log("finalSentencesCharLength:", finalSentencesCharLength);
+            
+                    if (interimTranslatedText.length > finalSentencesCharLength) {
+                        fSentCharLenReset = true;
+                        console.log("⚠️ Detected unfinished sentence. Adding punctuation...");
+                        let missingText = interimTranslatedText.substring(finalSentencesCharLength).trim();
+                        if (!/[.!?]$/.test(missingText)) {
+                            missingText += "."; // ✅ Append missing punctuation
+                        }
+            
+                        console.log("✏️ Added punctuation to last sentence:", missingText);
+                        if (!speechLog.includes(missingText)) {
+                            speechLog.push(missingText);
+                        }
+            
+                        finalizedSentences.push(missingText);
+                        finalSentencesCharLength = interimTranslatedText.length;
+                        // recogLPI = finalizedSentences.length;
+                        // console.log("recog LPI after reset in UST: ", recogLPI);
+                        processSynthesisQueue();
+                    }
+            
+                    isUserTalking = false;
+                    // console.log("✅ Restarting recognition to avoid missing input...");
+                    translator?.startContinuousRecognitionAsync();
+            
+                }, 4000);
             }
         
-            if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
-            userSpeakingTimeout = setTimeout(() => {
-                console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
-                console.log("ITT Length:", interimTranslatedText.length);
-                console.log("finalSentencesCharLength:", finalSentencesCharLength);
+            // if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
+            // userSpeakingTimeout = setTimeout(() => {
+            //     console.log("⏳ No speech detected for 3 seconds, checking last spoken text...");
+            //     console.log("ITT Length:", interimTranslatedText.length);
+            //     console.log("finalSentencesCharLength:", finalSentencesCharLength);
         
-                if (interimTranslatedText.length > finalSentencesCharLength) {
-                    fSentCharLenReset = true;
-                    console.log("⚠️ Detected unfinished sentence. Adding punctuation...");
-                    let missingText = interimTranslatedText.substring(finalSentencesCharLength).trim();
-                    if (!/[.!?]$/.test(missingText)) {
-                        missingText += "."; // ✅ Append missing punctuation
-                    }
+            //     if (interimTranslatedText.length > finalSentencesCharLength) {
+            //         fSentCharLenReset = true;
+            //         console.log("⚠️ Detected unfinished sentence. Adding punctuation...");
+            //         let missingText = interimTranslatedText.substring(finalSentencesCharLength).trim();
+            //         if (!/[.!?]$/.test(missingText)) {
+            //             missingText += "."; // ✅ Append missing punctuation
+            //         }
         
-                    console.log("✏️ Added punctuation to last sentence:", missingText);
-                    if (!speechLog.includes(missingText)) {
-                        speechLog.push(missingText);
-                    }
+            //         console.log("✏️ Added punctuation to last sentence:", missingText);
+            //         if (!speechLog.includes(missingText)) {
+            //             speechLog.push(missingText);
+            //         }
         
-                    finalizedSentences.push(missingText);
-                    finalSentencesCharLength = interimTranslatedText.length;
-                    // recogLPI = finalizedSentences.length;
-                    // console.log("recog LPI after reset in UST: ", recogLPI);
-                    processSynthesisQueue();
-                }
+            //         finalizedSentences.push(missingText);
+            //         finalSentencesCharLength = interimTranslatedText.length;
+            //         // recogLPI = finalizedSentences.length;
+            //         // console.log("recog LPI after reset in UST: ", recogLPI);
+            //         processSynthesisQueue();
+            //     }
         
-                isUserTalking = false;
-                // console.log("✅ Restarting recognition to avoid missing input...");
-                // translator?.startContinuousRecognitionAsync();
+            //     isUserTalking = false;
+            //     // console.log("✅ Restarting recognition to avoid missing input...");
+            //     translator?.startContinuousRecognitionAsync();
         
-            }, 4000);
+            // }, 4000);
         };      
+
+
+        speechLogTimeout
+
+        if (speechLogTimeout) clearTimeout(speechLogTimeout);
+        speechLogTimeout = setTimeout(() => {
+            console.log("speech log: ", speechLog);
+    
+        }, 10000);
 
         // translator.recognized = () => {
         //     console.log("📢 Translator recognized event fired - Processing queue");
