@@ -1,7 +1,7 @@
 /*
 
 Current setup: 
-- use usethisone4
+- use usethisone5
 - I think I got the recogLPI resetting correctly and the issues with the differing lengths fixed. We need to do some more testing but at least
 in our most previous iteration it was working well
 
@@ -1079,7 +1079,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
 
-
+    // usethisone5
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
