@@ -2,12 +2,11 @@
 
 Current setup: 
 - use usethisone4
-- the way we were attempting to send all of the sentences overwhelms the program with natural speech.
-The main issue is that it is attempting to correct itself after it has already sent sentences off to the speech log. This gets everything out of wack
-and can stop the whole system for a few moments. 
-
-We need to find a way to fix this. I think maybe we could have a variable that compares the sentences being sent to the ITT before we actually send them
-off to make sure they are formatted right?
+- Actually working pretty well. We are comparing the sentences to be sent to finalizedSentences before we send them and it seems to work pretty well. 
+The logs are not skipping or stopping and it is idenfying inconsistencies pretty easily. 
+We still need to fix:
+1. Sentence repeats occurring when sentences are correct (just partial sentences)
+2. Getting the last sentence to process
 
 */
 
@@ -827,8 +826,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
     // usethisone4
-    // Attempting to go back to sending sentences upon sentence threshold. The way we are trying to do it in above methods overwhelms the translator
-    // and sentences simply do not get synthesized
+    // Working pretty well, notes at top
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
