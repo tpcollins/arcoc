@@ -2,11 +2,10 @@
 
 Current setup: 
 - use usethisone4
-- Actually working pretty well. We are comparing the sentences to be sent to finalizedSentences before we send them and it seems to work pretty well. 
-The logs are not skipping or stopping and it is idenfying inconsistencies pretty easily. 
-We still need to fix:
-1. Sentence repeats occurring when sentences are correct (just partial sentences)
-2. Getting the last sentence to process
+- I am going to have to rethink my approach here. The sentence chunking process is too tightly coupled with the recognizing and synthesis. No matter what
+when we try and make corrections it just starts cutting speech out.
+
+I am going to try and decouple the process in usethisone4
 
 */
 
@@ -826,7 +825,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
     // usethisone4
-    // Working pretty well, notes at top
     const startContinuousTranslation = () => {
         const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
             apiKey as string,
@@ -862,41 +860,27 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let lastSentencePendingPunctuation = "";
         let fSentCharLenReset = false;
         
-        let clearLastSentenceTimeout: NodeJS.Timeout | null = null;
-
-        // ✅ Only send sentences when we have at least 2 finalized sentences
+        // ✅ **Force Synthesis for Each Sentence**
         const processSynthesisQueue = async () => {
-            if (isSpeaking || speechLog.length === 0) return;
-
+            if (isSpeaking || speechLog.length === 0) {
+                return;
+            }
+        
             isSpeaking = true;
             console.log("🔄 Processing queue:", speechLog);
-
-            while (synthesizedIndex < speechLog.length) {
-                let sentenceToProcess = speechLog[synthesizedIndex]; // ✅ Process one sentence at a time
-                await synthesizeSpeech(sentenceToProcess);
-                synthesizedIndex++;
+        
+            // ✅ Get sentences that haven't been synthesized yet
+            let sentencesToProcess = speechLog.slice(synthesizedIndex);
+            
+            // ✅ Process each sentence asynchronously
+            for (const sentence of sentencesToProcess) {
+                synthesizeSpeech(sentence);
+                synthesizedIndex++; // ✅ Move index forward **immediately**
             }
-
+        
             isSpeaking = false;
             console.log("✅ Queue is empty, waiting for new sentences.");
-        };
-
-        // ✅ Force-send the last remaining sentence if silence is detected
-        // const scheduleSentenceCleanup = () => {
-        //     if (clearLastSentenceTimeout) clearTimeout(clearLastSentenceTimeout);
-
-        //     clearLastSentenceTimeout = setTimeout(() => {
-        //         if (!isUserTalking && finalizedSentences.length > 0) {
-        //             let lastSentence = finalizedSentences[finalizedSentences.length - 1];
-        //             console.log("⏳ No speech detected, sending last sentence:", lastSentence);
-
-        //             if (!speechLog.includes(lastSentence)) {
-        //                 speechLog.push(lastSentence);
-        //                 processSynthesisQueue();
-        //             }
-        //         }
-        //     }, 4000); // ✅ Wait 4 seconds before forcing synthesis
-        // };         
+        };        
         
         // ✅ **Force Synthesis for One Sentence at a Time**
         const synthesizeSpeech = async (text: string) => {
@@ -926,52 +910,50 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 console.error("⚠️ Error during synthesis:", error);
             }
         };
-        
-       // ✅ **Track Sentences and Handle Punctuation**
-       translator.recognizing = (s, e) => {
+
+        let newInterimText: string;
+        translator.recognizing = (s, e) => { 
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-                interimTranslatedText = e.result.translations.get(tarLocale);
-                isUserTalking = true;
-        
-                if (clearLastSentenceTimeout) {
-                    console.log("❌ Canceling sentence cleanup due to new speech...");
-                    clearTimeout(clearLastSentenceTimeout);
-                }
-        
-                if (interimTranslatedText) {
-                    console.log("🔄 Interim (Buffering):", interimTranslatedText);
-                    let updatedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
-                    console.log("Finalized Sentences before processing:", updatedSentences);
-        
-                    // ✅ Step 1: Track previous speechLog to detect changes
-                    let previousSpeechLog = [...speechLog];
-        
-                    updatedSentences.forEach((sentence, index) => {
-                        let trimmedSentence = sentence.trim();
-        
-                        // ✅ Step 2: Check if this sentence already exists in speechLog
-                        let existingIndex = speechLog.findIndex((s) => s.startsWith(trimmedSentence));
-        
-                        if (existingIndex !== -1) {
-                            // 🔄 **Sentence was corrected by Azure—update it in-place**
-                            console.log(`🔄 Azure corrected sentence at index ${existingIndex}, updating...`);
-                            speechLog[existingIndex] = trimmedSentence;
-                        } else if (!speechLog.includes(trimmedSentence)) {
-                            // 📜 **Sentence is new—add to log**
-                            console.log("📜 Adding new sentence to Speech Log:", trimmedSentence);
-                            speechLog.push(trimmedSentence);
-                        }
-                    });
-        
-                    // ✅ Step 3: Process synthesis queue only if speechLog changed
-                    if (JSON.stringify(speechLog) !== JSON.stringify(previousSpeechLog)) {
-                        processSynthesisQueue();
-                    }
-        
-                    // scheduleSentenceCleanup();
-                }
+                newInterimText = e.result.translations.get(tarLocale);
+                console.log(newInterimText);
+                handleInterimText(newInterimText);
             }
-        };    
+        };
+
+
+        let pendingSentences: string[] = [];
+        let processingTimer: NodeJS.Timeout | null = null;
+
+        const handleInterimText = (newInterimText: string) => {
+            if (!newInterimText) return;
+
+            let updatedSentences = newInterimText.match(/[^.!?]+[.!?]/g) || [];
+            queueSentences(updatedSentences);
+        };
+        
+        const queueSentences = (updatedSentences: string[]) => {
+            pendingSentences = updatedSentences; // Keep the latest sentences
+        
+            if (processingTimer) clearTimeout(processingTimer);
+            processingTimer = setTimeout(() => {
+                processSentences(pendingSentences);
+                pendingSentences = []; // Clear pending queue after processing
+            }, 750); // Small delay before processing
+        };
+
+        const processSentences = (finalizedSentences: string[]) => {
+            finalizedSentences.forEach(sentence => {
+                let trimmedSentence = sentence.trim();
+        
+                // Only add new, fully formatted sentences
+                if (!speechLog.includes(trimmedSentence)) {
+                    console.log("📜 Adding sentence to Speech Log:", trimmedSentence);
+                    speechLog.push(trimmedSentence);
+                }
+            });
+        
+            processSynthesisQueue(); // ✅ Only synthesize when we are confident
+        };
     
         // ✅ Start Continuous Recognition
         translator.startContinuousRecognitionAsync(
