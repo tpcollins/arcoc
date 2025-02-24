@@ -930,37 +930,50 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
         
        // ✅ **Track Sentences and Handle Punctuation**
-        translator.recognizing = (s, e) => {
+       translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
                 interimTranslatedText = e.result.translations.get(tarLocale);
                 isUserTalking = true;
-
+        
                 if (clearLastSentenceTimeout) {
                     console.log("❌ Canceling sentence cleanup due to new speech...");
                     clearTimeout(clearLastSentenceTimeout);
                 }
-
+        
                 if (interimTranslatedText) {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
-                    finalizedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
-                    console.log("Finalized Sentences before processing:", finalizedSentences);
-
-                    if (finalizedSentences.length >= 2) {
-                        let sentenceToSend = finalizedSentences[0]; // ✅ Only send the first sentence
-                        if (!speechLog.includes(sentenceToSend)) {
-                            speechLog.push(sentenceToSend);
-                            console.log("📜 Added to Speech Log:", sentenceToSend);
+                    let updatedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
+                    console.log("Finalized Sentences before processing:", updatedSentences);
+        
+                    // ✅ Step 1: Track previous speechLog to detect changes
+                    let previousSpeechLog = [...speechLog];
+        
+                    updatedSentences.forEach((sentence, index) => {
+                        let trimmedSentence = sentence.trim();
+        
+                        // ✅ Step 2: Check if this sentence already exists in speechLog
+                        let existingIndex = speechLog.findIndex((s) => s.startsWith(trimmedSentence));
+        
+                        if (existingIndex !== -1) {
+                            // 🔄 **Sentence was corrected by Azure—update it in-place**
+                            console.log(`🔄 Azure corrected sentence at index ${existingIndex}, updating...`);
+                            speechLog[existingIndex] = trimmedSentence;
+                        } else if (!speechLog.includes(trimmedSentence)) {
+                            // 📜 **Sentence is new—add to log**
+                            console.log("📜 Adding new sentence to Speech Log:", trimmedSentence);
+                            speechLog.push(trimmedSentence);
                         }
-
-                        // ✅ Remove the first sentence since it has been processed
-                        finalizedSentences.shift();
+                    });
+        
+                    // ✅ Step 3: Process synthesis queue only if speechLog changed
+                    if (JSON.stringify(speechLog) !== JSON.stringify(previousSpeechLog)) {
+                        processSynthesisQueue();
                     }
-
-                    processSynthesisQueue(); // ✅ Immediately process synthesis
-                    // scheduleSentenceCleanup(); // ✅ Schedule cleanup in case of silence
+        
+                    // scheduleSentenceCleanup();
                 }
             }
-        };
+        };    
     
         // ✅ Start Continuous Recognition
         translator.startContinuousRecognitionAsync(
