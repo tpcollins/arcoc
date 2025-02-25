@@ -14,6 +14,10 @@ everything correctly. We might need to:
     and/or
     b. isolate what is causing this discrepancy in the synthesize method (if that is the issue because it very well might not be)
 
+
+* Another idea: send 3 sentences at a time to the speechlog from updatedSentences but make sure that they are equal to the equivalent index in 
+    ITT
+
 */
 
 
@@ -933,15 +937,17 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         
                 if (interimTranslatedText) {
                     console.log("🔄 Interim (Buffering):", interimTranslatedText);
-                    // let updatedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
-                    // console.log("Finalized Sentences before processing:", updatedSentences);
+                    let updatedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
+                    console.log("Finalized Sentences before processing:", updatedSentences);
         
-                    // updatedSentences.forEach((sentence) => {
-                    //     let trimmedSentence = sentence.trim();
-                    //     if (!speechLog.includes(trimmedSentence)) {
-                    //         speechLog.push(trimmedSentence);
-                    //     }
-                    // });
+                    updatedSentences.forEach((sentence) => {
+                        let trimmedSentence = sentence.trim();
+                        if (!speechLog.includes(trimmedSentence)) {
+                            speechLog.push(trimmedSentence);
+                        }
+                    });
+
+                    console.log("speechLog: ", speechLog);
         
                     // if (speechLog.length - lastProcessedIndex >= 3) {
                     //     processSynthesisQueue(); // ✅ Only trigger synthesis for full chunks
