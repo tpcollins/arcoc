@@ -2,12 +2,20 @@
 
 Current setup: 
 - use usethisone4
-- I am going to have to rethink my approach here. The sentence chunking process is too tightly coupled with the recognizing and synthesis. No matter what
-when we try and make corrections it just starts cutting speech out.
 
-I am going to try and decouple the process in usethisone4
+- We are going to need to rethink our entire approach.
+
+* I do not think the problem lies in how tighly coupled the recognizer is
+* I think the problem is in the synthesis or something else
+
+* The issue only occurs when we are trying to send things off. If we never interupt the process (see usethisone4 with everything commented out) it gets
+everything correctly. We might need to:
+    a. try and pull directly from interimTranslatedText and abandon the punctuation method
+    and/or
+    b. isolate what is causing this discrepancy in the synthesize method (if that is the issue because it very well might not be)
 
 */
+
 
 
 
@@ -859,28 +867,34 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         let finalizedSentences: string[] = [];
         let lastSentencePendingPunctuation = "";
         let fSentCharLenReset = false;
+    
+        let lastProcessedIndex = 0;  // ✅ Tracks which sentences have been spoken
         
-        // ✅ **Force Synthesis for Each Sentence**
         const processSynthesisQueue = async () => {
-            if (isSpeaking || speechLog.length === 0) {
-                return;
-            }
+            if (isSpeaking || speechLog.length === 0) return;
         
             isSpeaking = true;
             console.log("🔄 Processing queue:", speechLog);
         
-            // ✅ Get sentences that haven't been synthesized yet
-            let sentencesToProcess = speechLog.slice(synthesizedIndex);
-            
-            // ✅ Process each sentence asynchronously
-            for (const sentence of sentencesToProcess) {
-                synthesizeSpeech(sentence);
-                synthesizedIndex++; // ✅ Move index forward **immediately**
+            while (lastProcessedIndex < speechLog.length) {
+                let chunk = speechLog.slice(lastProcessedIndex, lastProcessedIndex + 3); // ✅ Process 3 at a time
+                for (let sentence of chunk) {
+                    await synthesizeSpeech(sentence);
+                }
+                lastProcessedIndex += chunk.length; // ✅ Move index forward
             }
         
             isSpeaking = false;
             console.log("✅ Queue is empty, waiting for new sentences.");
-        };        
+        };
+        
+        // ✅ **Ensures Remaining Sentences Are Processed**
+        const cleanupRemainingSentences = () => {
+            if (speechLog.length > lastProcessedIndex) {
+                console.log("🧹 Processing remaining sentences...");
+                processSynthesisQueue();
+            }
+        };
         
         // ✅ **Force Synthesis for One Sentence at a Time**
         const synthesizeSpeech = async (text: string) => {
@@ -911,48 +925,35 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             }
         };
 
-        let newInterimText: string;
-        translator.recognizing = (s, e) => { 
+        translator.recognizing = (s, e) => {
             if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-                newInterimText = e.result.translations.get(tarLocale);
-                console.log(newInterimText);
-                handleInterimText(newInterimText);
-            }
-        };
+                let interimTranslatedText = e.result.translations.get(tarLocale);
+                isUserTalking = true;
 
-
-        let pendingSentences: string[] = [];
-        let processingTimer: NodeJS.Timeout | null = null;
-
-        const handleInterimText = (newInterimText: string) => {
-            if (!newInterimText) return;
-
-            let updatedSentences = newInterimText.match(/[^.!?]+[.!?]/g) || [];
-            queueSentences(updatedSentences);
-        };
         
-        const queueSentences = (updatedSentences: string[]) => {
-            pendingSentences = updatedSentences; // Keep the latest sentences
+                if (interimTranslatedText) {
+                    console.log("🔄 Interim (Buffering):", interimTranslatedText);
+                    // let updatedSentences = interimTranslatedText.match(/[^.!?]+[.!?]/g) || [];
+                    // console.log("Finalized Sentences before processing:", updatedSentences);
         
-            if (processingTimer) clearTimeout(processingTimer);
-            processingTimer = setTimeout(() => {
-                processSentences(pendingSentences);
-                pendingSentences = []; // Clear pending queue after processing
-            }, 750); // Small delay before processing
-        };
-
-        const processSentences = (finalizedSentences: string[]) => {
-            finalizedSentences.forEach(sentence => {
-                let trimmedSentence = sentence.trim();
+                    // updatedSentences.forEach((sentence) => {
+                    //     let trimmedSentence = sentence.trim();
+                    //     if (!speechLog.includes(trimmedSentence)) {
+                    //         speechLog.push(trimmedSentence);
+                    //     }
+                    // });
         
-                // Only add new, fully formatted sentences
-                if (!speechLog.includes(trimmedSentence)) {
-                    console.log("📜 Adding sentence to Speech Log:", trimmedSentence);
-                    speechLog.push(trimmedSentence);
+                    // if (speechLog.length - lastProcessedIndex >= 3) {
+                    //     processSynthesisQueue(); // ✅ Only trigger synthesis for full chunks
+                    // }
                 }
-            });
         
-            processSynthesisQueue(); // ✅ Only synthesize when we are confident
+            // if (userSpeakingTimeout) clearTimeout(userSpeakingTimeout);
+            // userSpeakingTimeout = setTimeout(() => {
+            //     console.log("⏳ User stopped speaking, processing remaining sentences...");
+            //     cleanupRemainingSentences();
+            // }, 2000); // ✅ Ensures remaining speech gets synthesized after a short pause
+            };
         };
     
         // ✅ Start Continuous Recognition
