@@ -208,6 +208,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     
         if (isPlaying) {
             console.log("🎙️ Starting Deepgram transcription...");
+
+            console.log("Deepgram API Key:", process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY);
             
             deepgramSocket = startContinuousTranslation(); // Start Deepgram live transcription
             setIsDrpDwnDisabled(true);
@@ -220,9 +222,9 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             setIsDrpDwnDisabled(false);
         }
     
-        return () => {
-            deepgramSocket?.close(); // Cleanup when the component unmounts
-        };
+        // return () => {
+        //     deepgramSocket?.close(); // Cleanup when the component unmounts
+        // };
     }, [isPlaying, isDrpDwnDisabled]);
 
     // usethisone5
@@ -301,6 +303,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     
         return { deepgramSocket };
     };
+    
 
 
 
