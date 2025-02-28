@@ -10,7 +10,7 @@ Current setup:
 
 
 
-// React Variables
+// React Variablesf
 import React, { useState, useEffect } from 'react';
 // Dropdown Menu
 import DropdownMenu from '../R Components/DropdownMenu';
@@ -31,7 +31,7 @@ import { parse } from 'cookie';
 import { GetServerSidePropsContext } from 'next';
 import VolumeSlider from '../R Components/VolumeSlider';
 // Deepgram
-import { startDeepgramTranscription } from "@/pages/api/deepgram";
+import { createClient } from "@deepgram/sdk";
 
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
@@ -84,6 +84,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     const closeModal = () => setIsModalOpen(false);
     // Translator
     let translator: SpeechSDK.TranslationRecognizer | null = null;
+    // Deepgram Socket
+    const deepgram = createClient(process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!);
     
     const handleTarLang = (newLocale: string, newTarLocale: string) => {
         setLocale(newLocale);  // Update the locale in the context, which will trigger the useVoices hook
@@ -203,65 +205,119 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // }, []);
 
     // Original useEffect for isPlaying
+    let audioContext: AudioContext | null = null;
+    let workletNode: AudioWorkletNode | null = null;
+
     useEffect(() => {
-        let deepgramSocket: any; // Store Deepgram socket for cleanup
+        let deepgramSocket: any;
+
     
         if (isPlaying) {
             console.log("🎙️ Starting Deepgram transcription...");
-
-            console.log("Deepgram API Key:", process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY);
             
-            deepgramSocket = startContinuousTranslation(); // Start Deepgram live transcription
+            deepgramSocket = startContinuousTranslation(); // ✅ Start translation
             setIsDrpDwnDisabled(true);
         } else {
             console.log("🛑 Stopping transcription...");
-            deepgramSocket?.close(); // Properly close Deepgram WebSocket
-        }
+            deepgramSocket?.close(); // ✅ Properly close Deepgram WebSocket
     
-        if (!isPlaying) {
+            if (audioContext) {
+                audioContext.close(); // ✅ Stop AudioContext
+            }
+    
             setIsDrpDwnDisabled(false);
         }
     
-        // return () => {
-        //     deepgramSocket?.close(); // Cleanup when the component unmounts
-        // };
+        return () => {
+            deepgramSocket?.close(); // ✅ Cleanup on unmount
+            if (audioContext) {
+                audioContext.close();
+            }
+        };
     }, [isPlaying, isDrpDwnDisabled]);
+    
 
     // usethisone5
     const startContinuousTranslation = () => {
-        const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
-            apiKey as string,
-            "eastus2"
-        );
-    
-        speechConfig.speechRecognitionLanguage = "en-US";
-        speechConfig.addTargetLanguage(tarLocale);
-        speechConfig.voiceName = shortName;
-    
+        console.log("sct is functional");
+    // ✅ 1. Configure Deepgram (For Speech-to-Text + Translation)
+        const socket = deepgram.listen.live({
+            punctuate: true,
+            interim_results: true,
+            language: "en-US", // Change based on expected input language
+            endpointing: 1
+        });
+
+        console.log("1. socket declared");
+
+        // ✅ 2. Configure Azure Speech Synthesis (For TTS)
+        const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey, "eastus2");
+        synthConfig.speechSynthesisVoiceName = shortName;
         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-        const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, speakerOutputConfig);
-    
+        const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
+
+        console.log("2. synth configured")
+
+        // ✅ 3. State Tracking
         let speechLog: string[] = [];
         let isSpeaking = false;
         let lastProcessedIndex = 0;
-    
+
+        console.log("3. state tracking working")
+
+        // ✅ 4. Deepgram WebSocket Event Listener
+        socket.addListener("transcript", async (transcript: any) => {
+            console.log("4. Socket On");
+
+            if (transcript && transcript.channel.alternatives[0].transcript) {
+                let translatedText = transcript.channel.alternatives[0].transcript;
+                console.log("🔄 Live Translation:", translatedText);
+
+                let updatedSentences = translatedText.match(/[^.!?]+[.!?]/g) || [];
+
+                while (updatedSentences.length >= 4) {
+                    let sentencesToSend = updatedSentences.splice(0, 2); // ✅ Take first 2 sentences
+
+                    sentencesToSend.forEach((sentence: string) => {
+                        let trimmedSentence = sentence.trim();
+
+                        if (!speechLog.includes(trimmedSentence)) {
+                            speechLog.push(trimmedSentence);
+                            console.log("📜 Added to Speech Log:", trimmedSentence);
+                        }
+                    });
+
+                    processSynthesisQueue();
+                }
+            }
+        });     
+
+        socket.on("open", () => console.log("✅ Deepgram WebSocket Connected"));
+        socket.on("error", (err) => console.error("❌ Deepgram WebSocket Error:", err));
+        socket.on("close", () => console.warn("⚠️ Deepgram WebSocket Closed"));
+
+
+        // ✅ 5. Process Synthesis Queue (Azure TTS)
         const processSynthesisQueue = async () => {
+            console.log("5. PSQ")
             if (isSpeaking || lastProcessedIndex >= speechLog.length) return;
-    
+
             isSpeaking = true;
             console.log("🔄 Processing queue:", speechLog.slice(lastProcessedIndex));
-    
+
             while (lastProcessedIndex < speechLog.length) {
-                let sentenceToProcess = speechLog[lastProcessedIndex]; // ✅ Process one sentence at a time
+                let sentenceToProcess = speechLog[lastProcessedIndex];
                 await synthesizeSpeech(sentenceToProcess);
-                lastProcessedIndex++; // ✅ Move index forward immediately
+                lastProcessedIndex++;
             }
-    
+
             isSpeaking = false;
             console.log("✅ Queue is empty, waiting for new sentences.");
         };
-    
+
+        // ✅ 6. Azure Speech Synthesizer
         const synthesizeSpeech = async (text: string) => {
+            console.log("6. SS");
             return new Promise<void>((resolve, reject) => {
                 synthesizer.speakTextAsync(
                     text,
@@ -281,27 +337,61 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 );
             });
         };
-    
-        // Start Deepgram Transcription
-        const deepgramSocket = startDeepgramTranscription((translatedText) => {
-            console.log("📥 Processing Deepgram Text:", translatedText);
-            let updatedSentences = translatedText.match(/[^.!?]+[.!?]/g) || [];
-    
-            while (updatedSentences.length >= 4) {
-                let sentencesToSend = updatedSentences.splice(0, 2);
-    
-                sentencesToSend.forEach((sentence) => {
-                    let trimmedSentence = sentence.trim();
-                    if (!speechLog.includes(trimmedSentence)) {
-                        speechLog.push(trimmedSentence);
+
+        // ✅ 7. Start Deepgram Audio Stream (Replaced createScriptProcessor with AudioWorklet)
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
+            console.log("7. navigator functional");
+            audioContext = new AudioContext({sampleRate: 16000 });
+            const mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+            // Load the audio worklet processor
+            await audioContext.audioWorklet.addModule("processor.js");
+
+            // Create the worklet node
+            workletNode = new AudioWorkletNode(audioContext, "deepgram-processor");
+
+            mediaStreamSource.connect(workletNode);
+            workletNode.connect(audioContext.destination);
+
+            // workletNode.port.onmessage = (event) => {
+            //     if (socket.getReadyState() === 1) { // ✅ Check if Deepgram socket is open
+            //         const float32Array = event.data;
+            //         const int16Array = float32ToInt16(float32Array); // ✅ Convert audio data
+            //         socket.send(int16Array.buffer);
+            //     }
+            // };
+
+            workletNode.port.onmessage = (event) => {
+                const float32Array = event.data;
+                const int16Array = float32ToInt16(float32Array);
+            
+                // Calculate loudness
+                const maxAmplitude = Math.max(...float32Array.map(Math.abs)); // Get max absolute amplitude
+            
+                // Threshold for detecting speech
+                const silenceThreshold = 1; // Adjust as needed (0.01 is low but may still pick up soft speech)
+            
+                if (maxAmplitude > silenceThreshold) {
+                    console.log("📢 Sending Audio to Deepgram:", int16Array);
+                    if (socket.getReadyState() === 1) {
+                        console.log("🔄 Converted Int16Array:", int16Array.buffer); // Debug conversion
+                        socket.send(int16Array.buffer);
                     }
-                });
-    
-                processSynthesisQueue();
-            }
+                }
+            };
+
+            function float32ToInt16(float32Array: Float32Array) {
+                const int16Array = new Int16Array(float32Array.length);
+                for (let i = 0; i < float32Array.length; i++) {
+                    let sample = Math.max(-1, Math.min(1, float32Array[i])); // Ensure range is [-1,1]
+                    int16Array[i] = sample < 0 ? sample * 32768 : sample * 32767; // Convert to PCM 16-bit
+                }
+                return int16Array;
+            } 
         });
-    
-        return { deepgramSocket };
+
+
+        console.log("✅ Continuous translation started with Deepgram & Azure.");
     };
     
 
@@ -322,7 +412,165 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
 
 
-    // usethisone4
+    
+
+    
+    return (
+        <>
+        <div className="d-flex flex-column align-items-center mt-4">
+            {/* Dropdowns */}
+            <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
+                <DropdownMenu
+                    data={targetLangData}
+                    handleTarLang={handleTarLang}
+                    isDisabled={isDrpDwnDisabled}
+                    renderItem={(item) => (
+                        <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
+                            <img
+                                alt="File icon"
+                                aria-hidden
+                                height={16}
+                                src={item.flag}
+                                style={{ paddingRight: '5px' }}
+                                width={16}
+                            />
+                            {item.lang}
+                        </div>
+                    )}
+                />
+    
+                <DropdownMenu
+                    data={dropdownData}
+                    handleShortName={handleShortName}
+                    isDisabled={isDrpDwnDisabled}
+                    requiredFields={requiredFields}
+                    renderItem={(item) => (
+                        <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
+                            <img
+                                alt="File icon"
+                                aria-hidden
+                                height={16}
+                                src={item.flag}
+                                style={{ paddingRight: '5px' }}
+                                width={16}
+                            />
+                            {item.lang + ' (' + item.gender + ')'}
+                        </div>
+                    )}
+                />
+            </div>
+    
+            {/* <div style={{ width: '700px', marginBottom: '20px', marginTop: '20px' }}>
+                <h3 className="text-center">
+                    Sentence Buffer
+                    <span
+                        style={{
+                            marginLeft: '8px',
+                            cursor: 'pointer',
+                            color: '#ffffff', // Lighter color for better contrast
+                            fontWeight: 'bold', // Make it bold for better visibility
+                            fontSize: '16px', // Slightly larger font size
+                            textDecoration: 'none', // Remove underline for cleaner look
+                            backgroundColor: '#007bff', // Add a background for visibility
+                            padding: '2px 6px', // Add padding for a button-like effect
+                            borderRadius: '50%', // Make it circular
+                        }}
+                        onClick={openModal}
+                        onMouseEnter={(e) => (e.target.style.backgroundColor = '#0056b3')} // Hover effect: darker background
+                        onMouseLeave={(e) => (e.target.style.backgroundColor = '#007bff')}
+                        >
+                        ?
+                    </span>
+
+                </h3>
+
+                {isModalOpen && (
+                    <>
+
+                    <div
+                        style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 999,
+                        }}
+                        onClick={closeModal}
+                    />
+
+                    <div
+                    style={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px',
+                        zIndex: 1000,
+                    }}
+                    onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside the modal
+                    >
+                        <p
+                        style={{
+                            color: 'black',
+                        }}
+                        >
+                        The Sentence Buffer allows you to adjust how much time is taken in between sentences.
+                        </p>
+
+                        <p
+                        style={{
+                            color: 'black',
+                            paddingTop: '10px',
+                        }}
+                        >
+                        This is mainly for faster speaking languages such as Spanish, to reduce overlap.
+                        </p>
+                        <div
+                        className="text-center"
+                        style={{
+                            paddingTop: '10px',
+                        }}
+                        >
+                        <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={closeModal}
+                            style={{ marginTop: '10px' }}
+                        >
+                            Close
+                        </button>
+                        </div>
+                    </div>
+                    </>
+                )}
+                <VolumeSlider onVolumeChange={handleTimeoutChange}/>
+            </div>
+            */}
+    
+            <div>
+                <PlayButton
+                    isPlaying={isPlaying}
+                    setIsPlaying={setIsPlaying}
+                    requiredFields={requiredFields}
+                    data={plyBtnData}
+                />
+            </div> 
+        </div>
+    </>    
+  );
+};
+
+export default LanguageSelection;
+
+
+
+
+// usethisone4
     // Playground for usethisone3
     // const startContinuousTranslation = () => {
     //     const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(
@@ -1040,156 +1288,3 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     
     //     return { translator };
     // };
-
-    
-    return (
-        <>
-        <div className="d-flex flex-column align-items-center mt-4">
-            {/* Dropdowns */}
-            <div className="d-flex justify-content-between mb-4" style={{ width: '700px' }}>
-                <DropdownMenu
-                    data={targetLangData}
-                    handleTarLang={handleTarLang}
-                    isDisabled={isDrpDwnDisabled}
-                    renderItem={(item) => (
-                        <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
-                            <img
-                                alt="File icon"
-                                aria-hidden
-                                height={16}
-                                src={item.flag}
-                                style={{ paddingRight: '5px' }}
-                                width={16}
-                            />
-                            {item.lang}
-                        </div>
-                    )}
-                />
-    
-                <DropdownMenu
-                    data={dropdownData}
-                    handleShortName={handleShortName}
-                    isDisabled={isDrpDwnDisabled}
-                    requiredFields={requiredFields}
-                    renderItem={(item) => (
-                        <div style={{ alignItems: 'center', display: 'flex', width: '100%' }}>
-                            <img
-                                alt="File icon"
-                                aria-hidden
-                                height={16}
-                                src={item.flag}
-                                style={{ paddingRight: '5px' }}
-                                width={16}
-                            />
-                            {item.lang + ' (' + item.gender + ')'}
-                        </div>
-                    )}
-                />
-            </div>
-    
-            {/* <div style={{ width: '700px', marginBottom: '20px', marginTop: '20px' }}>
-                <h3 className="text-center">
-                    Sentence Buffer
-                    <span
-                        style={{
-                            marginLeft: '8px',
-                            cursor: 'pointer',
-                            color: '#ffffff', // Lighter color for better contrast
-                            fontWeight: 'bold', // Make it bold for better visibility
-                            fontSize: '16px', // Slightly larger font size
-                            textDecoration: 'none', // Remove underline for cleaner look
-                            backgroundColor: '#007bff', // Add a background for visibility
-                            padding: '2px 6px', // Add padding for a button-like effect
-                            borderRadius: '50%', // Make it circular
-                        }}
-                        onClick={openModal}
-                        onMouseEnter={(e) => (e.target.style.backgroundColor = '#0056b3')} // Hover effect: darker background
-                        onMouseLeave={(e) => (e.target.style.backgroundColor = '#007bff')}
-                        >
-                        ?
-                    </span>
-
-                </h3>
-
-                {isModalOpen && (
-                    <>
-
-                    <div
-                        style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        zIndex: 999,
-                        }}
-                        onClick={closeModal}
-                    />
-
-                    <div
-                    style={{
-                        position: 'fixed',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        border: '1px solid #ccc',
-                        borderRadius: '8px',
-                        zIndex: 1000,
-                    }}
-                    onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside the modal
-                    >
-                        <p
-                        style={{
-                            color: 'black',
-                        }}
-                        >
-                        The Sentence Buffer allows you to adjust how much time is taken in between sentences.
-                        </p>
-
-                        <p
-                        style={{
-                            color: 'black',
-                            paddingTop: '10px',
-                        }}
-                        >
-                        This is mainly for faster speaking languages such as Spanish, to reduce overlap.
-                        </p>
-                        <div
-                        className="text-center"
-                        style={{
-                            paddingTop: '10px',
-                        }}
-                        >
-                        <button
-                            type="button"
-                            className="btn btn-danger"
-                            onClick={closeModal}
-                            style={{ marginTop: '10px' }}
-                        >
-                            Close
-                        </button>
-                        </div>
-                    </div>
-                    </>
-                )}
-                <VolumeSlider onVolumeChange={handleTimeoutChange}/>
-            </div>
-            */}
-    
-            <div>
-                <PlayButton
-                    isPlaying={isPlaying}
-                    setIsPlaying={setIsPlaying}
-                    requiredFields={requiredFields}
-                    data={plyBtnData}
-                />
-            </div> 
-        </div>
-    </>    
-  );
-};
-
-export default LanguageSelection;
