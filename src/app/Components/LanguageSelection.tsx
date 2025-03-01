@@ -2,8 +2,8 @@
 
 Current setup: 
 - use usethisone5
-
-// We are going to attempt to use deepgram with azure to reduce the latency
+- deepgram method working almost perfectly. Just need to figure out why it is cutting out words in the beginning
+    - it cuts out words upon the first synthesis, but then has no issues after that. At least with our president's day passage
 
 */
 
@@ -264,40 +264,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 mediaRecorder.addEventListener('dataavailable', (event) => {
                     socket.send(event.data);
                 });
-                mediaRecorder.start(1000);
+                mediaRecorder.start(1);
             };
-    
-            // ✅ **Deepgram WebSocket Listener**: Process incoming transcripts
-            // socket.onmessage = async (message) => {
-            //     const received = JSON.parse(message.data);
-    
-            //     if (received.channel && received.channel.alternatives[0].transcript) {
-            //         let translatedText = received.channel.alternatives[0].transcript;
-            //         console.log("🔄 Live Translation:", translatedText);
-    
-            //         let updatedSentences = translatedText.match(/[^.!?]+[.!?]/g) || [];
-    
-            //         // ✅ Push finalized sentences to speechLog
-            //         // while (updatedSentences.length >= 4) {
-            //         //     let sentencesToSend = updatedSentences.splice(0, 2);
-    
-            //         //     sentencesToSend.forEach((sentence: string) => {
-            //         //         let trimmedSentence = sentence.trim();
-    
-            //         //         if (!speechLog.includes(trimmedSentence)) {
-            //         //             speechLog.push(trimmedSentence);
-            //         //             console.log("📜 Added to Speech Log:", trimmedSentence);
-            //         //         }
-            //         //     });
-    
-            //         //     processSynthesisQueue(); // ✅ Synthesize speech from Azure
-            //         // }
-
-            //         speechLog.push(translatedText);
-
-            //         processSynthesisQueue();
-            //     }
-            // };
 
             socket.onmessage = async (message) => {
                 const received = JSON.parse(message.data);
