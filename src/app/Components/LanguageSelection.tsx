@@ -11,7 +11,7 @@ Current setup:
 
 
 // React Variablesf
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // Dropdown Menu
 import DropdownMenu from '../R Components/DropdownMenu';
 // Use Voices and Use Locale
@@ -205,34 +205,24 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // }, []);
 
     // Original useEffect for isPlaying
-    let audioContext: AudioContext | null = null;
-    let workletNode: AudioWorkletNode | null = null;
+    const deepgramSocketRef = useRef<WebSocket | null>(null);
 
     useEffect(() => {
-        let deepgramSocket: any;
-
-    
-        if (isPlaying) {
-            console.log("🎙️ Starting Deepgram transcription...");
-            
-            deepgramSocket = startContinuousTranslation(); // ✅ Start translation
-            setIsDrpDwnDisabled(true);
-        } else {
+        if (!isPlaying) {
             console.log("🛑 Stopping transcription...");
-            deepgramSocket?.close(); // ✅ Properly close Deepgram WebSocket
-    
-            if (audioContext) {
-                audioContext.close(); // ✅ Stop AudioContext
-            }
-    
+            deepgramSocketRef.current?.close();
             setIsDrpDwnDisabled(false);
+            return;
+        }
+    
+        if (!deepgramSocketRef.current || deepgramSocketRef.current.readyState !== WebSocket.OPEN) {
+            console.log("🎙️ Starting Deepgram transcription...");
+            deepgramSocketRef.current = startContinuousTranslation();
+            setIsDrpDwnDisabled(true);
         }
     
         return () => {
-            deepgramSocket?.close(); // ✅ Cleanup on unmount
-            if (audioContext) {
-                audioContext.close();
-            }
+            deepgramSocketRef.current?.close();
         };
     }, [isPlaying, isDrpDwnDisabled]);
     
@@ -240,81 +230,167 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // usethisone5
     const startContinuousTranslation = () => {
         console.log("sct is functional");
-    // ✅ 1. Configure Deepgram (For Speech-to-Text + Translation)
-        const socket = deepgram.listen.live({
-            punctuate: true,
-            interim_results: true,
-            language: "en-US", // Change based on expected input language
-            endpointing: 1
-        });
-
+    
+        // ✅ 1. Configure Deepgram WebSocket
+        const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!]);
+    
         console.log("1. socket declared");
-
+    
         // ✅ 2. Configure Azure Speech Synthesis (For TTS)
         const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(apiKey, "eastus2");
         synthConfig.speechSynthesisVoiceName = shortName;
         const speakerOutputConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
         const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, speakerOutputConfig);
 
+        const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(apiKey, "eastus2");
+        speechConfig.speechRecognitionLanguage = "en-US";
+        speechConfig.addTargetLanguage(tarLocale);
+        speechConfig.voiceName = shortName;
+    
         console.log("2. synth configured")
-
+    
         // ✅ 3. State Tracking
         let speechLog: string[] = [];
         let isSpeaking = false;
         let lastProcessedIndex = 0;
+    
+        console.log("3. state tracking working");
+    
+        // ✅ 4. Start Deepgram Audio Stream
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    
+            socket.onopen = () => {
+                mediaRecorder.addEventListener('dataavailable', (event) => {
+                    socket.send(event.data);
+                });
+                mediaRecorder.start(1000);
+            };
+    
+            // ✅ **Deepgram WebSocket Listener**: Process incoming transcripts
+            // socket.onmessage = async (message) => {
+            //     const received = JSON.parse(message.data);
+    
+            //     if (received.channel && received.channel.alternatives[0].transcript) {
+            //         let translatedText = received.channel.alternatives[0].transcript;
+            //         console.log("🔄 Live Translation:", translatedText);
+    
+            //         let updatedSentences = translatedText.match(/[^.!?]+[.!?]/g) || [];
+    
+            //         // ✅ Push finalized sentences to speechLog
+            //         // while (updatedSentences.length >= 4) {
+            //         //     let sentencesToSend = updatedSentences.splice(0, 2);
+    
+            //         //     sentencesToSend.forEach((sentence: string) => {
+            //         //         let trimmedSentence = sentence.trim();
+    
+            //         //         if (!speechLog.includes(trimmedSentence)) {
+            //         //             speechLog.push(trimmedSentence);
+            //         //             console.log("📜 Added to Speech Log:", trimmedSentence);
+            //         //         }
+            //         //     });
+    
+            //         //     processSynthesisQueue(); // ✅ Synthesize speech from Azure
+            //         // }
 
-        console.log("3. state tracking working")
+            //         speechLog.push(translatedText);
 
-        // ✅ 4. Deepgram WebSocket Event Listener
-        socket.addListener("transcript", async (transcript: any) => {
-            console.log("4. Socket On");
+            //         processSynthesisQueue();
+            //     }
+            // };
 
-            if (transcript && transcript.channel.alternatives[0].transcript) {
-                let translatedText = transcript.channel.alternatives[0].transcript;
-                console.log("🔄 Live Translation:", translatedText);
-
-                let updatedSentences = translatedText.match(/[^.!?]+[.!?]/g) || [];
-
-                while (updatedSentences.length >= 4) {
-                    let sentencesToSend = updatedSentences.splice(0, 2); // ✅ Take first 2 sentences
-
-                    sentencesToSend.forEach((sentence: string) => {
-                        let trimmedSentence = sentence.trim();
-
-                        if (!speechLog.includes(trimmedSentence)) {
-                            speechLog.push(trimmedSentence);
-                            console.log("📜 Added to Speech Log:", trimmedSentence);
-                        }
-                    });
-
-                    processSynthesisQueue();
+            socket.onmessage = async (message) => {
+                const received = JSON.parse(message.data);
+                const transcript = received.channel.alternatives[0]?.transcript;
+            
+                if (transcript) {
+                    console.log("🔄 Live Translation (Before Azure Translation):", transcript);
+            
+                    try {
+                        // 🔹 Step 1: Translate text using Azure Translator
+                        const translatedText = await translateText(transcript); // Ensure tarLocale is correct
+            
+                        console.log(`🌍 Translated to ${tarLocale}:`, translatedText);
+            
+                        // 🔹 Step 2: Send translated text to Azure Speech Synthesis
+                        processSynthesisQueue(translatedText);
+                    } catch (error) {
+                        console.error("❌ Translation Error:", error);
+                    }
                 }
-            }
-        });     
-
-        socket.on("open", () => console.log("✅ Deepgram WebSocket Connected"));
-        socket.on("error", (err) => console.error("❌ Deepgram WebSocket Error:", err));
-        socket.on("close", () => console.warn("⚠️ Deepgram WebSocket Closed"));
-
-
+            };
+            
+            const transKey = process.env.NEXT_PUBLIC_TRANS_KEY as string;
+            const translateText = async (text: string) => {
+                console.log("🌍 Translating Text:", text);
+            
+                // const endpoint = process.env.NEXT_PUBLIC_TRANS_KEY;
+                const url = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=en&to=${tarLocale}`;
+                console.log(url);
+            
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Ocp-Apim-Subscription-Key": transKey,
+                            "Ocp-Apim-Subscription-Region": "eastus2",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify([{ text }]),
+                    });
+            
+                    const data = await response.json();
+                    console.log("🔄 Translation API Response:", data);
+            
+                    if (data?.[0]?.translations?.[0]?.text) {
+                        console.log("✅ Translated Text:", data[0].translations[0].text);
+                        return data[0].translations[0].text;
+                    } else {
+                        console.error("❌ No translation found in response");
+                        return text; // Fail-safe: return original text if translation fails
+                    }
+                } catch (error) {
+                    console.error("⚠️ Translation Error:", error);
+                    return text;
+                }
+            };            
+    
+            socket.onerror = (err) => console.error("❌ Deepgram WebSocket Error:", err);
+            socket.onclose = () => console.warn("⚠️ Deepgram WebSocket Closed");
+        });
+    
         // ✅ 5. Process Synthesis Queue (Azure TTS)
-        const processSynthesisQueue = async () => {
-            console.log("5. PSQ")
-            if (isSpeaking || lastProcessedIndex >= speechLog.length) return;
+        // const processSynthesisQueue = async () => {
+        //     console.log("5. PSQ");
+        //     if (isSpeaking || lastProcessedIndex >= speechLog.length) return;
+    
+        //     isSpeaking = true;
+        //     console.log("🔄 Processing queue:", speechLog.slice(lastProcessedIndex));
+    
+        //     while (lastProcessedIndex < speechLog.length) {
+        //         let sentenceToProcess = speechLog[lastProcessedIndex];
+        //         await synthesizeSpeech(sentenceToProcess);
+        //         lastProcessedIndex++;
+        //     }
+    
+        //     isSpeaking = false;
+        //     console.log("✅ Queue is empty, waiting for new sentences.");
+        // };
 
+        const processSynthesisQueue = async (translatedText: string) => {
+            console.log("5. PSQ");
+        
+            if (isSpeaking) return; // Prevent overlapping speech
+        
             isSpeaking = true;
-            console.log("🔄 Processing queue:", speechLog.slice(lastProcessedIndex));
-
-            while (lastProcessedIndex < speechLog.length) {
-                let sentenceToProcess = speechLog[lastProcessedIndex];
-                await synthesizeSpeech(sentenceToProcess);
-                lastProcessedIndex++;
-            }
-
+            console.log("🔄 Processing queue:", translatedText);
+        
+            await synthesizeSpeech(translatedText);
+        
             isSpeaking = false;
             console.log("✅ Queue is empty, waiting for new sentences.");
-        };
-
+        };        
+    
         // ✅ 6. Azure Speech Synthesizer
         const synthesizeSpeech = async (text: string) => {
             console.log("6. SS");
@@ -337,83 +413,10 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 );
             });
         };
-
-        // ✅ 7. Start Deepgram Audio Stream (Replaced createScriptProcessor with AudioWorklet)
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
-            console.log("7. navigator functional");
-            audioContext = new AudioContext({sampleRate: 16000 });
-            const mediaStreamSource = audioContext.createMediaStreamSource(stream);
-
-            // Load the audio worklet processor
-            await audioContext.audioWorklet.addModule("processor.js");
-
-            // Create the worklet node
-            workletNode = new AudioWorkletNode(audioContext, "deepgram-processor");
-
-            mediaStreamSource.connect(workletNode);
-            workletNode.connect(audioContext.destination);
-
-            // workletNode.port.onmessage = (event) => {
-            //     if (socket.getReadyState() === 1) { // ✅ Check if Deepgram socket is open
-            //         const float32Array = event.data;
-            //         const int16Array = float32ToInt16(float32Array); // ✅ Convert audio data
-            //         socket.send(int16Array.buffer);
-            //     }
-            // };
-
-            workletNode.port.onmessage = (event) => {
-                const float32Array = event.data;
-                const int16Array = float32ToInt16(float32Array);
-            
-                // Calculate loudness
-                const maxAmplitude = Math.max(...float32Array.map(Math.abs)); // Get max absolute amplitude
-            
-                // Threshold for detecting speech
-                const silenceThreshold = 1; // Adjust as needed (0.01 is low but may still pick up soft speech)
-            
-                if (maxAmplitude > silenceThreshold) {
-                    console.log("📢 Sending Audio to Deepgram:", int16Array);
-                    if (socket.getReadyState() === 1) {
-                        console.log("🔄 Converted Int16Array:", int16Array.buffer); // Debug conversion
-                        socket.send(int16Array.buffer);
-                    }
-                }
-            };
-
-            function float32ToInt16(float32Array: Float32Array) {
-                const int16Array = new Int16Array(float32Array.length);
-                for (let i = 0; i < float32Array.length; i++) {
-                    let sample = Math.max(-1, Math.min(1, float32Array[i])); // Ensure range is [-1,1]
-                    int16Array[i] = sample < 0 ? sample * 32768 : sample * 32767; // Convert to PCM 16-bit
-                }
-                return int16Array;
-            } 
-        });
-
-
+    
         console.log("✅ Continuous translation started with Deepgram & Azure.");
+        return socket;
     };
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
     
     return (
         <>
