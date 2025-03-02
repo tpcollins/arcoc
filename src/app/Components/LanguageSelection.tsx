@@ -86,7 +86,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     let translator: SpeechSDK.TranslationRecognizer | null = null;
     // Deepgram Socket
     // const deepgram = createClient(process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!);
-    const deepgram = createClient(process.env.DEEPGRAM_API_KEY!);
+    // const deepgram = createClient(process.env.DEEPGRAM_API_KEY!);
     
     const handleTarLang = (newLocale: string, newTarLocale: string) => {
         setLocale(newLocale);  // Update the locale in the context, which will trigger the useVoices hook
@@ -233,8 +233,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         console.log("sct is functional");
     
         // ✅ 1. Configure Deepgram WebSocket
-        // const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!]);
-        const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.DEEPGRAM_API_KEY!]);
+        const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!]);
+        // const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.DEEPGRAM_API_KEY!]);
     
         console.log("1. socket declared");
     
@@ -290,7 +290,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 }
             };
             
-            const transKey = process.env.TRANS_KEY as string;
+            const transKey = process.env.NEXT_PUBLIC_TRANS_KEY as string;
             const translateText = async (text: string) => {
                 console.log("🌍 Translating Text:", text);
             
