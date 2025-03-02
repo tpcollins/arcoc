@@ -277,6 +277,23 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 mediaRecorder.start(1);
             };
 
+            // socket.onopen = () => {
+            //     console.log("✅ WebSocket Connected, warming up...");
+            
+            //     // Send 1 second of silence to "wake up" Deepgram
+            //     const silence = new Uint8Array(16000).fill(0);
+            //     socket.send(silence);
+            
+            //     setTimeout(() => {
+            //         console.log("🎤 Recording Started");
+            //         mediaRecorder.start(1); // Start recording immediately after warm-up
+            
+            //         mediaRecorder.addEventListener("dataavailable", (event) => {
+            //             socket.send(event.data);
+            //         });
+            //     }, 1000); // Give Deepgram 1 second to process the silence
+            // };
+
             socket.onmessage = async (message) => {
                 const received = JSON.parse(message.data);
                 const transcript = received.channel.alternatives[0]?.transcript;
