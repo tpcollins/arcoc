@@ -2,9 +2,17 @@
 
 Current setup: 
 - use usethisone5
-- deepgram method working almost perfectly. Just need to figure out why it is cutting out words in the beginning
-    - it cuts out words upon the first synthesis, but then has no issues after that. At least with our president's day passage
 
+Deepgram is working very well. The only big issue is that when it first starts off, it seems to have some trouble processing the first packet. Words are
+getting cut out once synthesis starts. However, every packet after that (although we have only tested sending 2 more packets after the initial one that
+messes up) seems to work fine.
+
+I think we need to add a warmup packet to run through the translator while it starts
+
+Minor issue:
+    - It does seem to mess up the speech just a little bit when it is continuous. No huge issues but would be good to get it fixed. I can
+    see this being an issue once we try and test it with spanish
+ 
 */
 
 
@@ -260,7 +268,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     
         // ✅ 4. Start Deepgram Audio Stream
         navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
-            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); 
     
             socket.onopen = () => {
                 mediaRecorder.addEventListener('dataavailable', (event) => {
