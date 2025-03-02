@@ -233,7 +233,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         console.log("sct is functional");
     
         // ✅ 1. Configure Deepgram WebSocket
-        const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!]);
+        // const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!]);
+        const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.DEEPGRAM_API_KEY!]);
     
         console.log("1. socket declared");
     
