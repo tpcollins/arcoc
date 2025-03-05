@@ -1,29 +1,15 @@
-import { createClient } from "@deepgram/sdk";
+import { NextApiRequest, NextApiResponse } from "next";
 
-const deepgram = createClient(process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!);
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method !== "GET") {
+        return res.status(405).json({ error: "Method Not Allowed" });
+    }
 
-export const transcribeLiveAudio = async (onTextReceived: (text: string) => void) => {
-    const socket = deepgram.listen.live({
-        punctuate: true,
-        interim_results: true,
-        language: "en-US", // Change based on expected input language
-    });
+    const deepgramKey = process.env.DEEPGRAM_API_KEY;
 
-    socket.on("open", () => {
-        console.log("✅ Deepgram Connection Open");
-    });
+    if (!deepgramKey) {
+        return res.status(500).json({ error: "Deepgram API key is missing!" });
+    }
 
-    socket.on("transcript", (data) => {
-        const transcript = data.channel.alternatives[0]?.transcript;
-        if (transcript) {
-            console.log("🎙️ Recognized Speech:", transcript);
-            onTextReceived(transcript); // Send to translation
-        }
-    });
-
-    socket.on("error", (error) => {
-        console.error("❌ Deepgram Error:", error);
-    });
-
-    return socket;
-};
+    res.status(200).json({ token: deepgramKey });
+}

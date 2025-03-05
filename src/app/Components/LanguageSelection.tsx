@@ -3,16 +3,10 @@
 Current setup: 
 - use usethisone5
 
-Deepgram is working very well. The only big issue is that when it first starts off, it seems to have some trouble processing the first packet. Words are
-getting cut out once synthesis starts. However, every packet after that (although we have only tested sending 2 more packets after the initial one that
-messes up) seems to work fine.
+TODO: 
+1. Get key functioning with live web version
+2. Add in "warm up packet" 
 
-I think we need to add a warmup packet to run through the translator while it starts
-
-Minor issue:
-    - It does seem to mess up the speech just a little bit when it is continuous. No huge issues but would be good to get it fixed. I can
-    see this being an issue once we try and test it with spanish
- 
 */
 
 
@@ -226,23 +220,32 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     
         if (!deepgramSocketRef.current || deepgramSocketRef.current.readyState !== WebSocket.OPEN) {
             console.log("🎙️ Starting Deepgram transcription...");
-            deepgramSocketRef.current = startContinuousTranslation();
+            (async () => {
+                deepgramSocketRef.current = await startContinuousTranslation(); // ✅ Await here
+                setIsDrpDwnDisabled(true);
+            })();
             setIsDrpDwnDisabled(true);
         }
     
         return () => {
             deepgramSocketRef.current?.close();
         };
-    }, [isPlaying, isDrpDwnDisabled]);
+    }, [isPlaying]);
     
 
+    const getDeepgramToken = async () => {
+        const response = await fetch("/api/deepgram");
+        const data = await response.json();
+        return data.token;
+    };
+    
     // usethisone5
-    const startContinuousTranslation = () => {
+    const startContinuousTranslation = async () => {
         console.log("sct is functional");
     
         // ✅ 1. Configure Deepgram WebSocket
-        const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY!]);
-        // const socket = new WebSocket('wss://api.deepgram.com/v1/listen', ['token', process.env.DEEPGRAM_API_KEY!]);
+        const token = await getDeepgramToken();
+        const socket = new WebSocket(`wss://api.deepgram.com/v1/listen`, ["token", token]);
     
         console.log("1. socket declared");
     
@@ -277,23 +280,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 mediaRecorder.start(1);
             };
 
-            // socket.onopen = () => {
-            //     console.log("✅ WebSocket Connected, warming up...");
-            
-            //     // Send 1 second of silence to "wake up" Deepgram
-            //     const silence = new Uint8Array(16000).fill(0);
-            //     socket.send(silence);
-            
-            //     setTimeout(() => {
-            //         console.log("🎤 Recording Started");
-            //         mediaRecorder.start(1); // Start recording immediately after warm-up
-            
-            //         mediaRecorder.addEventListener("dataavailable", (event) => {
-            //             socket.send(event.data);
-            //         });
-            //     }, 1000); // Give Deepgram 1 second to process the silence
-            // };
-
             socket.onmessage = async (message) => {
                 const received = JSON.parse(message.data);
                 const transcript = received.channel.alternatives[0]?.transcript;
@@ -315,23 +301,14 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 }
             };
             
-            const transKey = process.env.NEXT_PUBLIC_TRANS_KEY as string;
             const translateText = async (text: string) => {
                 console.log("🌍 Translating Text:", text);
             
-                // const endpoint = process.env.NEXT_PUBLIC_TRANS_KEY;
-                const url = `https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=en&to=${tarLocale}`;
-                console.log(url);
-            
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetch("/api/translate", {
                         method: "POST",
-                        headers: {
-                            "Ocp-Apim-Subscription-Key": transKey,
-                            "Ocp-Apim-Subscription-Region": "eastus2",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify([{ text }]),
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text, targetLang: tarLocale }),
                     });
             
                     const data = await response.json();
