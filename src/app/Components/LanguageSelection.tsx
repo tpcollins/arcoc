@@ -4,7 +4,6 @@ Current setup:
 - use usethisone5
 
 TODO: 
-1. Fix socket close issue
 2. Add in "warm up packet" 
 
 */
@@ -273,11 +272,42 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
             const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); 
     
+            // socket.onopen = () => {
+            //     mediaRecorder.addEventListener('dataavailable', (event) => {
+            //         socket.send(event.data);
+            //     });
+            //     mediaRecorder.start(1);
+            // };
+
+            const audioContext = new (window.AudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            // 🔥 Generate a low-volume hum
+            oscillator.type = "sine"; // Simple sine wave
+            oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low frequency
+            gainNode.gain.setValueAtTime(0.01, audioContext.currentTime); // Low volume
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
             socket.onopen = () => {
-                mediaRecorder.addEventListener('dataavailable', (event) => {
-                    socket.send(event.data);
-                });
-                mediaRecorder.start(1);
+                console.log("✅ Deepgram WebSocket Connected, warming up...");
+
+                // Start the hum sound
+                oscillator.start();
+                console.log("🔄 Warm-up audio started...");
+
+                setTimeout(() => {
+                    oscillator.stop(); // Stop the warm-up sound after 2 seconds
+                    console.log("✅ Translator Ready.");
+
+                    // Start real transcription
+                    mediaRecorder.addEventListener("dataavailable", (event) => {
+                        socket.send(event.data);
+                    });
+                    mediaRecorder.start(1);
+                    console.log("🎤 Recording Started.");
+                }, 2000); // Let the warm-up last for 2 seconds
             };
 
             socket.onmessage = async (message) => {
