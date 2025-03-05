@@ -4,7 +4,7 @@ Current setup:
 - use usethisone5
 
 TODO: 
-1. Get key functioning with live web version
+1. Fix socket close issue
 2. Add in "warm up packet" 
 
 */
@@ -281,6 +281,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             };
 
             socket.onmessage = async (message) => {
+                if (socket.readyState !== WebSocket.OPEN) return;
+
                 const received = JSON.parse(message.data);
                 const transcript = received.channel.alternatives[0]?.transcript;
             
@@ -328,7 +330,17 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             };            
     
             socket.onerror = (err) => console.error("❌ Deepgram WebSocket Error:", err);
-            socket.onclose = () => console.warn("⚠️ Deepgram WebSocket Closed");
+            socket.onclose = () => {
+                console.warn("⚠️ Deepgram WebSocket Closed");
+
+                // ✅ Cleanup: Remove all event listeners when closed
+                mediaRecorder.stop();
+                mediaRecorder.removeEventListener('dataavailable', () => {});
+                socket.onmessage = null;
+                socket.onopen = null;
+                socket.onerror = null;
+                socket.onclose = null;
+            };
         });
     
         // ✅ 5. Process Synthesis Queue (Azure TTS)
