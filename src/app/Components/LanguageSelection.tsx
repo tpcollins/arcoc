@@ -3,11 +3,7 @@
 Current setup: 
 - use usethisone5
 
-TODO: 
-2. Make it where it does not start picking up speech until the warmup is finished
-
-NICE TO HAVE:
-1. Transcription on screen of english and translation
+All TODOs and Nice to have's are finished. Just need to keep testing it with lectures, further distances, and Spanish
 
 */
 
@@ -311,7 +307,54 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             const gainNode = audioContext.createGain();
             gainNode.gain.value = 3; // 🔥 Boost mic sensitivity (Adjust between 2.0 - 5.0)
             source.connect(gainNode);
-            // gainNode.connect(audioContext.destination);
+
+            // 🎛 Web Audio API - Analyzing Microphone Input
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256; // Controls sensitivity
+            source.connect(analyser);
+            const canvas = document.getElementById("audioVisualizer") as HTMLCanvasElement;
+            const canvasCtx = canvas.getContext("2d");
+
+            function drawVisualizer() {
+                requestAnimationFrame(drawVisualizer);
+    
+                if (!canvasCtx) return;
+    
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
+    
+                canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+                canvasCtx.fillStyle = "rgba(255, 255, 255, 0.1)";
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+    
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+    
+                // 🎛 Sensitivity Adjustments
+                const noiseThreshold = 15; // 🔥 Adjust this value to ignore background noise
+                const smoothingFactor = 0.2; // 🔥 Smooth out fluctuations
+
+                for (let i = 0; i < bufferLength; i++) {
+                    let volume = dataArray[i];
+
+                    // 🔥 Ignore very low-volume noise (background noise)
+                    if (volume < noiseThreshold) {
+                        volume = 0; 
+                    } else {
+                        // 🔥 Apply smoothing so bars don't jump too much
+                        volume = volume * smoothingFactor + (1 - smoothingFactor) * (dataArray[i] / 2);
+                    }
+
+                    barHeight = volume;
+                    canvasCtx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 2;
+                }
+            }
+    
+            drawVisualizer(); // 🔥 Start animation
 
             // 🎤 Generate a low-volume hum (Warm-up Packet)
             const oscillator = audioContext.createOscillator();
@@ -599,6 +642,13 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                     requiredFields={requiredFields}
                     data={plyBtnData}
                 />
+
+                <canvas id="audioVisualizer" width="300" height="80" style={{ 
+                    display: isPlaying ? 'block' : 'none',
+                    margin: '20px auto', 
+                    background: 'transparent',
+                    borderRadius: '8px',
+                }}></canvas>
             </div> 
         </div>
     </>    
