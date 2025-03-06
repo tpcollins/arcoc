@@ -78,6 +78,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     const [isDrpDwnDisabled, setIsDrpDwnDisabled] = useState(false);
     const requiredFields = [tarLocale, shortName]; 
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isWarmingUp, setIsWarmingUp] = useState(false); // 🔥 Move warm-up state to parent
+
 
     // Timeout
     const [processTimeout, setProcessTimeOut] = useState(100);
@@ -212,21 +214,43 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // Original useEffect for isPlaying
     const deepgramSocketRef = useRef<WebSocket | null>(null);
 
+    // useEffect(() => {
+    //     if (!isPlaying) {
+    //         console.log("🛑 Stopping transcription...");
+    //         deepgramSocketRef.current?.close();
+    //         setIsDrpDwnDisabled(false);
+    //         return;
+    //     }
+    
+    //     if (!deepgramSocketRef.current || deepgramSocketRef.current.readyState !== WebSocket.OPEN) {
+    //         console.log("🎙️ Starting Deepgram transcription...");
+    //         (async () => {
+    //             deepgramSocketRef.current = await startContinuousTranslation(); // ✅ Await here
+    //             setIsDrpDwnDisabled(true);
+    //         })();
+    //         setIsDrpDwnDisabled(true);
+    //     }
+    
+    //     return () => {
+    //         deepgramSocketRef.current?.close();
+    //     };
+    // }, [isPlaying]);
+
     useEffect(() => {
         if (!isPlaying) {
             console.log("🛑 Stopping transcription...");
             deepgramSocketRef.current?.close();
             setIsDrpDwnDisabled(false);
+            setIsWarmingUp(false); // 🔥 Ensure warm-up resets when stopped
             return;
         }
     
         if (!deepgramSocketRef.current || deepgramSocketRef.current.readyState !== WebSocket.OPEN) {
             console.log("🎙️ Starting Deepgram transcription...");
             (async () => {
-                deepgramSocketRef.current = await startContinuousTranslation(); // ✅ Await here
+                deepgramSocketRef.current = await startContinuousTranslation();
                 setIsDrpDwnDisabled(true);
             })();
-            setIsDrpDwnDisabled(true);
         }
     
         return () => {
@@ -234,7 +258,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         };
     }, [isPlaying]);
     
-
     const getDeepgramToken = async () => {
         const response = await fetch("/api/deepgram");
         const data = await response.json();
@@ -244,6 +267,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
     // usethisone5
     const startContinuousTranslation = async () => {
         console.log("sct is functional");
+
+        setIsWarmingUp(true); // 🔥 Indicate warm-up has started
     
         // ✅ 1. Configure Deepgram WebSocket
         const token = await getDeepgramToken();
@@ -280,17 +305,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         }}).then(async (stream) => {
             const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); 
 
-            // const audioContext = new (window.AudioContext)();
-            // const oscillator = audioContext.createOscillator();
-            // const gainNode = audioContext.createGain();
-
-            // // 🔥 Generate a low-volume hum
-            // oscillator.type = "sine"; // Simple sine wave
-            // oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low frequency
-            // gainNode.gain.setValueAtTime(0.01, audioContext.currentTime); // Low volume
-            // oscillator.connect(gainNode);
-            // gainNode.connect(audioContext.destination);
-
             // 🎛 Audio Context for microphone gain boost
             const audioContext = new AudioContext();
             const source = audioContext.createMediaStreamSource(stream);
@@ -302,6 +316,7 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
             // 🎤 Generate a low-volume hum (Warm-up Packet)
             const oscillator = audioContext.createOscillator();
             const warmupGain = audioContext.createGain();
+            let warmingUp = true;
 
             oscillator.type = "sine"; // Simple sine wave
             oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low frequency
@@ -311,18 +326,22 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
 
             socket.onopen = () => {
                 console.log("✅ Deepgram WebSocket Connected, warming up...");
-
-                // Start the hum sound
+        
+                // Start the hum sound (Warm-up Packet)
                 oscillator.start();
                 console.log("🔄 Warm-up audio started...");
-
+        
                 setTimeout(() => {
+                    setIsWarmingUp(false);
                     oscillator.stop(); // Stop the warm-up sound after 2 seconds
+                    warmingUp = false; // ✅ Allow real speech after warm-up
                     console.log("✅ Translator Ready.");
-
-                    // Start real transcription
+        
+                    // 🎤 Start real transcription AFTER warm-up
                     mediaRecorder.addEventListener("dataavailable", (event) => {
-                        socket.send(event.data);
+                        if (!warmingUp) { // 🔥 Blocks speech during warm-up
+                            socket.send(event.data);
+                        }
                     });
                     mediaRecorder.start(1);
                     console.log("🎤 Recording Started.");
@@ -393,23 +412,6 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         });
     
         // ✅ 5. Process Synthesis Queue (Azure TTS)
-        // const processSynthesisQueue = async () => {
-        //     console.log("5. PSQ");
-        //     if (isSpeaking || lastProcessedIndex >= speechLog.length) return;
-    
-        //     isSpeaking = true;
-        //     console.log("🔄 Processing queue:", speechLog.slice(lastProcessedIndex));
-    
-        //     while (lastProcessedIndex < speechLog.length) {
-        //         let sentenceToProcess = speechLog[lastProcessedIndex];
-        //         await synthesizeSpeech(sentenceToProcess);
-        //         lastProcessedIndex++;
-        //     }
-    
-        //     isSpeaking = false;
-        //     console.log("✅ Queue is empty, waiting for new sentences.");
-        // };
-
         const processSynthesisQueue = async (translatedText: string) => {
             console.log("5. PSQ");
         
@@ -592,6 +594,8 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
                 <PlayButton
                     isPlaying={isPlaying}
                     setIsPlaying={setIsPlaying}
+                    isWarmingUp={isWarmingUp} // 🔥 Pass down warm-up state
+                    setIsWarmingUp={setIsWarmingUp} // 🔥 Allow toggling warm-up
                     requiredFields={requiredFields}
                     data={plyBtnData}
                 />

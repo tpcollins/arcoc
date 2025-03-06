@@ -92,6 +92,8 @@ export interface PlaybuttonProps {
     setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
     requiredFields: Array<any>;
     data: PlaybuttonData;
+    isWarmingUp: boolean;
+    setIsWarmingUp: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface PlaybuttonData {
