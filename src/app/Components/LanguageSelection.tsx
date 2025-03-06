@@ -4,7 +4,10 @@ Current setup:
 - use usethisone5
 
 TODO: 
-2. Add in "warm up packet" 
+2. Make it where it does not start picking up speech until the warmup is finished
+
+NICE TO HAVE:
+1. Transcription on screen of english and translation
 
 */
 
@@ -262,33 +265,49 @@ const LanguageSelection: React.FC<LanguageSelectionProps> = () => {
         console.log("2. synth configured")
     
         // ✅ 3. State Tracking
-        let speechLog: string[] = [];
         let isSpeaking = false;
-        let lastProcessedIndex = 0;
     
         console.log("3. state tracking working");
     
         // ✅ 4. Start Deepgram Audio Stream
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(async (stream) => {
+        navigator.mediaDevices.getUserMedia({ audio: {
+            autoGainControl: false, // 🔥 Disable browser auto gain control
+            noiseSuppression: false, // 🔥 Ensure background audio is not suppressed
+            echoCancellation: false, // 🔥 Prevents automatic audio processing
+            latency: 0, // Reduce delay
+            sampleRate: 48000, // High-quality audio capture
+            channelCount: 1, // Mono for better speech recognition
+        }}).then(async (stream) => {
             const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); 
-    
-            // socket.onopen = () => {
-            //     mediaRecorder.addEventListener('dataavailable', (event) => {
-            //         socket.send(event.data);
-            //     });
-            //     mediaRecorder.start(1);
-            // };
 
-            const audioContext = new (window.AudioContext)();
-            const oscillator = audioContext.createOscillator();
+            // const audioContext = new (window.AudioContext)();
+            // const oscillator = audioContext.createOscillator();
+            // const gainNode = audioContext.createGain();
+
+            // // 🔥 Generate a low-volume hum
+            // oscillator.type = "sine"; // Simple sine wave
+            // oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low frequency
+            // gainNode.gain.setValueAtTime(0.01, audioContext.currentTime); // Low volume
+            // oscillator.connect(gainNode);
+            // gainNode.connect(audioContext.destination);
+
+            // 🎛 Audio Context for microphone gain boost
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(stream);
             const gainNode = audioContext.createGain();
+            gainNode.gain.value = 3; // 🔥 Boost mic sensitivity (Adjust between 2.0 - 5.0)
+            source.connect(gainNode);
+            // gainNode.connect(audioContext.destination);
 
-            // 🔥 Generate a low-volume hum
+            // 🎤 Generate a low-volume hum (Warm-up Packet)
+            const oscillator = audioContext.createOscillator();
+            const warmupGain = audioContext.createGain();
+
             oscillator.type = "sine"; // Simple sine wave
             oscillator.frequency.setValueAtTime(100, audioContext.currentTime); // Low frequency
-            gainNode.gain.setValueAtTime(0.01, audioContext.currentTime); // Low volume
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            warmupGain.gain.setValueAtTime(0.01, audioContext.currentTime); // Low volume
+            oscillator.connect(warmupGain);
+            warmupGain.connect(audioContext.destination);
 
             socket.onopen = () => {
                 console.log("✅ Deepgram WebSocket Connected, warming up...");
